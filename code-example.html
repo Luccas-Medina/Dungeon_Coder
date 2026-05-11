@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Dungeon Coder - Clean Logic Desktop</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&amp;family=Hanken+Grotesk:wght@300..900&amp;family=JetBrains+Mono:wght@400..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .workspace-grid {
+            background-image: radial-gradient(circle, #c7c4d8 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+        .pixel-shadow {
+            box-shadow: 4px 4px 0px 0px rgba(53, 37, 205, 0.1);
+        }
+        .block-connector {
+            clip-path: polygon(0% 0%, 20% 0%, 25% 10%, 75% 10%, 80% 0%, 100% 0%, 100% 100%, 80% 100%, 75% 90%, 25% 90%, 20% 100%, 0% 100%);
+        }
+        body {
+            background-color: #f9f9fe;
+            color: #1a1c1f;
+            overflow: hidden;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed-dim": "#4edea3",
+                        "surface-container-highest": "#e2e2e7",
+                        "surface-container-lowest": "#ffffff",
+                        "primary": "#3525cd",
+                        "on-secondary": "#ffffff",
+                        "primary-fixed": "#e2dfff",
+                        "error-container": "#ffdad6",
+                        "on-secondary-container": "#684000",
+                        "on-surface-variant": "#464555",
+                        "on-primary-container": "#dad7ff",
+                        "on-background": "#1a1c1f",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-container": "#67f4b7",
+                        "outline": "#777587",
+                        "secondary-fixed-dim": "#ffb95f",
+                        "surface-bright": "#f9f9fe",
+                        "surface-container-high": "#e8e8ed",
+                        "on-primary-fixed-variant": "#3323cc",
+                        "secondary-container": "#fea619",
+                        "surface-variant": "#e2e2e7",
+                        "on-secondary-fixed-variant": "#653e00",
+                        "on-secondary-fixed": "#2a1700",
+                        "error": "#ba1a1a",
+                        "on-surface": "#1a1c1f",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-fixed": "#002113",
+                        "primary-fixed-dim": "#c3c0ff",
+                        "secondary-fixed": "#ffddb8",
+                        "surface-container": "#ededf2",
+                        "surface-container-low": "#f3f3f8",
+                        "surface-dim": "#d9dade",
+                        "inverse-primary": "#c3c0ff",
+                        "tertiary": "#005338",
+                        "outline-variant": "#c7c4d8",
+                        "primary-container": "#4f46e5",
+                        "inverse-on-surface": "#f0f0f5",
+                        "inverse-surface": "#2e3034",
+                        "secondary": "#855300",
+                        "background": "#f9f9fe",
+                        "on-tertiary": "#ffffff",
+                        "surface": "#f9f9fe",
+                        "on-error": "#ffffff",
+                        "surface-tint": "#4d44e3",
+                        "tertiary-fixed": "#6ffbbe",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "on-primary-fixed": "#002113",
+                        "tertiary-container": "#006e4b"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-padding": "24px",
+                        "unit": "8px",
+                        "gutter": "16px",
+                        "stack-md": "16px",
+                        "stack-sm": "8px",
+                        "stack-lg": "32px"
+                    },
+                    "fontFamily": {
+                        "headline-sm": ["Space Grotesk"],
+                        "body-md": ["Hanken Grotesk"],
+                        "display-lg": ["Space Grotesk"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "code-block": ["JetBrains Mono"],
+                        "label-caps": ["JetBrains Mono"],
+                        "headline-md": ["Space Grotesk"]
+                    },
+                    "fontSize": {
+                        "headline-sm": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "code-block": ["14px", { "lineHeight": "22px", "fontWeight": "500" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "fontWeight": "700" }],
+                        "headline-md": ["32px", { "lineHeight": "40px", "fontWeight": "600" }]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="font-body-md text-on-surface bg-background min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<header class="bg-surface dark:bg-surface-dim shadow-sm flex justify-between items-center w-full px-container-padding py-stack-sm h-16 fixed top-0 z-50 docked full-width">
+<div class="flex items-center gap-stack-sm">
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim">Dungeon Coder</span>
+</div>
+<div class="hidden md:flex items-center gap-stack-lg">
+<button class="font-label-caps text-label-caps text-primary font-bold hover:bg-surface-container-low transition-colors px-4 py-2 rounded-lg">EDITOR</button>
+<button class="font-label-caps text-label-caps text-on-surface-variant hover:bg-surface-container-low transition-colors px-4 py-2 rounded-lg">WORLD MAP</button>
+<button class="font-label-caps text-label-caps text-on-surface-variant hover:bg-surface-container-low transition-colors px-4 py-2 rounded-lg">CHALLENGES</button>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:bg-surface-container-low transition-colors p-2 rounded-full active:scale-95 transition-transform">
+<span class="material-symbols-outlined">monetization_on</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container-low transition-colors p-2 rounded-full active:scale-95 transition-transform">
+<span class="material-symbols-outlined">vpn_key</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container-low transition-colors p-2 rounded-full active:scale-95 transition-transform">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Main Layout Container -->
+<div class="flex flex-1 pt-16 h-screen overflow-hidden">
+<!-- SideNavBar (Palette) -->
+<aside class="fixed left-0 top-16 bottom-0 flex flex-col p-stack-md gap-stack-md bg-surface-container-lowest dark:bg-surface-container-low w-64 docked left-0 h-full border-r border-outline-variant/30">
+<div class="mb-2">
+<h2 class="font-headline-sm text-headline-sm text-primary">Palette</h2>
+<p class="font-label-caps text-label-caps text-on-surface-variant opacity-70">Logic Blocks</p>
+</div>
+<div class="space-y-stack-sm overflow-y-auto pr-1">
+<!-- Move Forward Block -->
+<div class="bg-primary-container text-on-primary-container rounded-lg p-3 flex items-center gap-stack-sm cursor-grab active:cursor-grabbing hover:brightness-110 transition-all shadow-sm">
+<span class="material-symbols-outlined">arrow_forward</span>
+<span class="font-label-caps text-label-caps">Move Forward</span>
+</div>
+<!-- Turn Right Block -->
+<div class="text-on-surface-variant flex items-center gap-stack-sm p-3 bg-surface-container-high rounded-lg cursor-grab active:cursor-grabbing hover:bg-surface-container-highest transition-all">
+<span class="material-symbols-outlined">rotate_right</span>
+<span class="font-label-caps text-label-caps">Turn Right</span>
+</div>
+<!-- Repeat Block -->
+<div class="text-on-surface-variant flex items-center gap-stack-sm p-3 bg-secondary-container/20 border-2 border-secondary-container/50 rounded-lg cursor-grab active:cursor-grabbing hover:bg-secondary-container/30 transition-all">
+<span class="material-symbols-outlined">replay</span>
+<span class="font-label-caps text-label-caps">Repeat</span>
+</div>
+<!-- Attack Block -->
+<div class="text-on-surface-variant flex items-center gap-stack-sm p-3 bg-error-container/20 border-2 border-error-container/50 rounded-lg cursor-grab active:cursor-grabbing hover:bg-error-container/30 transition-all">
+<span class="material-symbols-outlined">sports_esports</span>
+<span class="font-label-caps text-label-caps">Action</span>
+</div>
+</div>
+<!-- Block Legend/Info -->
+<div class="mt-auto bg-surface-container-low p-stack-sm rounded-lg">
+<p class="font-body-md text-body-md text-on-surface-variant italic text-xs leading-relaxed">
+                    Drag blocks into the workspace to build your logic stream.
+                </p>
+</div>
+</aside>
+<!-- Central Workspace & Stage -->
+<main class="ml-64 mr-72 flex-1 flex flex-col relative overflow-hidden">
+<div class="flex-1 grid grid-cols-1 lg:grid-cols-2 p-gutter gap-gutter h-full">
+<!-- Stage (Game Preview) -->
+<div class="flex flex-col gap-stack-md h-full">
+<div class="bg-surface-container-lowest rounded-xl p-stack-md pixel-shadow flex-1 flex flex-col min-h-0">
+<div class="flex justify-between items-center mb-stack-sm">
+<span class="font-headline-sm text-headline-sm text-primary">Stage</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant bg-surface-container p-1 px-3 rounded-full">Phase 1: Forest</span>
+</div>
+<div class="relative flex-1 bg-surface-container-high rounded-lg overflow-hidden border-4 border-white">
+<img alt="Forest Stage" class="absolute inset-0 w-full h-full object-cover opacity-80" data-alt="A lush, vibrant pixel-art forest with towering emerald trees and soft dappled sunlight filtering through the canopy. The scene uses a bright, high-clarity color palette with rich greens, earthy browns, and soft blue highlights. In the center, a 2D grid path is visible, designed with a clean computing aesthetic that feels professional and laboratory-grade. The mood is peaceful yet full of mystery and adventure." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBjGL7rNGSS7q7Gc_J-hY0W8z1rXWCAQPo5L3C87vUXsgKnC2mDtE4NLjHN0ZV_uvhTFhjmj-_uPSj-eGwMMzE_3JHeyjV-KAujwaOKFZfbreE4qz6C0YhSsux3AfJ09_Xk-HNEt1BXHnod9F4hsXXPtrye-bqjfsQuU_Xor0SmQSrKrYtC7BFOFVLQIhoXRpQpyTG821F8azchQcdbJCT4tguiG9SK-PZGXtYy_cb3rjtUCfv_E4V_PgkuX_PFS8fIgzN-uxchk8qi"/>
+<!-- Game Grid Overlay -->
+<div class="absolute inset-0 grid grid-cols-6 grid-rows-6 opacity-40 border-slate-300">
+<div class="border border-white/20"></div><div class="border border-white/20"></div><div class="border border-white/20"></div><div class="border border-white/20"></div><div class="border border-white/20"></div><div class="border border-white/20"></div>
+<div class="border border-white/20"></div><div class="border border-white/20"></div><div class="border border-white/20"></div><div class="border border-white/20"></div><div class="border border-white/20"></div><div class="border border-white/20"></div>
+<div class="border border-white/20"></div><div class="border border-white/20"></div><div class="border border-white/20"></div><div class="border border-white/20"></div><div class="border border-white/20"></div><div class="border border-white/20"></div>
+<div class="border border-white/20"></div><div class="border border-white/20"></div><div class="border border-white/20"></div><div class="border border-white/20"></div><div class="border border-white/20"></div><div class="border border-white/20"></div>
+<div class="border border-white/20"></div><div class="border border-white/20"></div><div class="border border-white/20"></div><div class="border border-white/20"></div><div class="border border-white/20"></div><div class="border border-white/20"></div>
+<div class="border border-white/20"></div><div class="border border-white/20"></div><div class="border border-white/20"></div><div class="border border-white/20"></div><div class="border border-white/20"></div><div class="border border-white/20"></div>
+</div>
+<!-- Game Elements -->
+<!-- Robot Sprite (IMAGE_5) -->
+<div class="absolute bottom-[16%] left-[16%] w-12 h-12 flex items-center justify-center">
+<img alt="Cyborg Sprite" class="w-10 h-10 object-contain drop-shadow-lg" data-alt="A cute, stylized cyborg character in a high-clarity 2D pixel-art style, standing in a heroic pose. The cyborg is predominantly white and indigo with glowing amber accents on its mechanical joints and visor. It is small and compact, designed for a modern laboratory-grade programming game aesthetic. The lighting is soft and professional, highlighting its clean, tactile surfaces." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnrHZPI3cw54SsoF6GUu0L6ovq8AMI_qJqVUArHbkJGVHKaaz7ZqR1CvvB2sNBeYasJji-CnyXioX4CNq6zfO6E6TSa95Q6XfifiyNuhkur3fBhDM6oG3o8e2mJkU3VLd-m9YD4VNtQ_Nu-8OuyQopc3BpJyP6CWYNnlN0N0bJGVvwF9tXoZm4XatboIRJnLVZA_OEDhCC9B4H7yB_Z_DcHjisUeFWLy219xS6j8uA32Uo2DKoCiXxhp7gvJtX8iIRee4A_Dq5WoAZ"/>
+</div>
+<!-- Coins -->
+<div class="absolute top-[50%] left-[33%] text-yellow-500 animate-bounce">
+<span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">monetization_on</span>
+</div>
+<div class="absolute top-[33%] left-[50%] text-yellow-500 animate-bounce">
+<span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">monetization_on</span>
+</div>
+<!-- Key -->
+<div class="absolute top-[16%] right-[33%] text-indigo-600">
+<span class="material-symbols-outlined text-3xl">vpn_key</span>
+</div>
+<!-- Door -->
+<div class="absolute top-[16%] right-[8%] w-16 h-16 bg-white/20 border-4 border-indigo-200 rounded-lg flex items-center justify-center backdrop-blur-sm">
+<span class="material-symbols-outlined text-4xl text-white">door_front</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Workspace (Code Editor Area) -->
+<div class="flex flex-col gap-stack-md h-full">
+<div class="bg-surface-container-lowest rounded-xl p-stack-md pixel-shadow flex-1 flex flex-col workspace-grid relative overflow-hidden">
+<div class="flex justify-between items-center mb-stack-sm">
+<span class="font-headline-sm text-headline-sm text-primary">Workspace</span>
+<div class="flex gap-2">
+<span class="w-3 h-3 rounded-full bg-error/30"></span>
+<span class="w-3 h-3 rounded-full bg-secondary-container/30"></span>
+<span class="w-3 h-3 rounded-full bg-tertiary-fixed-dim"></span>
+</div>
+</div>
+<!-- Coding Blocks Area -->
+<div class="flex-1 relative p-stack-md flex flex-col gap-0 items-start">
+<!-- Repeat Block (Container) -->
+<div class="flex flex-col items-start min-w-[240px]">
+<div class="bg-secondary-container text-white px-4 py-3 rounded-t-lg flex items-center gap-2 w-full shadow-sm z-10">
+<span class="material-symbols-outlined text-sm">replay</span>
+<span class="font-label-caps text-label-caps">Repeat 3X</span>
+</div>
+<div class="border-l-8 border-secondary-container bg-secondary-container/5 ml-0 pl-6 py-4 flex flex-col gap-2 w-full relative">
+<!-- Nested Block: Move Forward -->
+<div class="bg-primary-container text-on-primary-container px-4 py-3 rounded-lg flex items-center gap-2 shadow-sm w-48 transition-transform hover:-translate-y-0.5">
+<span class="material-symbols-outlined text-sm">arrow_forward</span>
+<span class="font-label-caps text-label-caps">Move Forward</span>
+</div>
+<!-- Nested Block: Turn Right -->
+<div class="bg-surface-container-highest text-on-surface-variant px-4 py-3 rounded-lg flex items-center gap-2 shadow-sm w-48 transition-transform hover:-translate-y-0.5">
+<span class="material-symbols-outlined text-sm">rotate_right</span>
+<span class="font-label-caps text-label-caps">Turn Right</span>
+</div>
+</div>
+<div class="bg-secondary-container text-white px-4 py-2 rounded-b-lg w-full shadow-sm flex items-center justify-end">
+<span class="text-[10px] font-label-caps opacity-60">END REPEAT</span>
+</div>
+</div>
+</div>
+<!-- Quick Info overlay -->
+<div class="absolute bottom-4 right-4 bg-white/80 backdrop-blur-md p-2 rounded-lg border border-outline-variant/30 flex gap-4 text-[10px] font-label-caps text-on-surface-variant">
+<div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-primary"></span> Logic: 12%</div>
+<div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-tertiary"></span> Power: 100%</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Controls -->
+<div class="px-gutter pb-gutter">
+<div class="bg-surface-container-lowest rounded-xl p-4 flex items-center justify-between pixel-shadow border border-outline-variant/20">
+<div class="flex gap-4">
+<div class="flex flex-col">
+<span class="text-[10px] font-label-caps text-on-surface-variant">CODE HEALTH</span>
+<div class="w-32 h-2 bg-surface-container rounded-full overflow-hidden mt-1">
+<div class="w-[85%] h-full bg-tertiary-fixed-dim"></div>
+</div>
+</div>
+</div>
+<div class="flex gap-stack-md">
+<button class="bg-tertiary-fixed-dim text-on-tertiary-fixed font-label-caps text-label-caps px-8 py-3 rounded-lg border-b-4 border-tertiary shadow-lg hover:brightness-105 active:border-b-0 active:translate-y-1 transition-all flex items-center gap-2">
+<span class="material-symbols-outlined">play_arrow</span>
+                            Run Code
+                        </button>
+<button class="bg-secondary-container text-on-secondary-fixed font-label-caps text-label-caps px-8 py-3 rounded-lg border-b-4 border-secondary shadow-lg hover:brightness-105 active:border-b-0 active:translate-y-1 transition-all flex items-center gap-2">
+<span class="material-symbols-outlined">pause</span>
+                            Pause
+                        </button>
+<button class="bg-error text-white font-label-caps text-label-caps px-8 py-3 rounded-lg border-b-4 border-on-error-container shadow-lg hover:brightness-105 active:border-b-0 active:translate-y-1 transition-all flex items-center gap-2">
+<span class="material-symbols-outlined">restart_alt</span>
+                            Reset
+                        </button>
+</div>
+<div class="flex items-center gap-4">
+<div class="text-right">
+<span class="block text-[10px] font-label-caps text-on-surface-variant">TOTAL STEPS</span>
+<span class="font-code-block text-primary font-bold">012 / 100</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Right Side Panel (Leaderboard) -->
+<aside class="fixed right-0 top-16 bottom-0 w-72 bg-surface-container-lowest p-stack-md flex flex-col gap-stack-md border-l border-outline-variant/30">
+<div>
+<h2 class="font-headline-sm text-headline-sm text-primary">Global Ranking</h2>
+<p class="font-label-caps text-label-caps text-on-surface-variant opacity-70">Top Code Architects</p>
+</div>
+<div class="flex flex-col gap-stack-sm">
+<!-- Rank 1 -->
+<div class="flex items-center gap-3 p-3 bg-surface-container-low rounded-lg border border-transparent hover:border-primary/20 transition-all">
+<div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-fixed flex items-center justify-center font-bold text-sm">1</div>
+<div class="flex-1">
+<p class="font-label-caps text-label-caps text-on-surface">PixelPirate</p>
+<p class="text-[10px] text-on-surface-variant">Lv. 42 Master Coder</p>
+</div>
+<span class="font-code-block text-xs text-primary font-bold">12,840</span>
+</div>
+<!-- Rank 2 -->
+<div class="flex items-center gap-3 p-3 bg-surface-container-low rounded-lg border border-transparent hover:border-primary/20 transition-all">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest text-on-surface flex items-center justify-center font-bold text-sm">2</div>
+<div class="flex-1">
+<p class="font-label-caps text-label-caps text-on-surface">CodeWitch</p>
+<p class="text-[10px] text-on-surface-variant">Lv. 39 Logic Wizard</p>
+</div>
+<span class="font-code-block text-xs text-primary font-bold">11,200</span>
+</div>
+<!-- Rank 3 -->
+<div class="flex items-center gap-3 p-3 bg-surface-container-low rounded-lg border border-transparent hover:border-primary/20 transition-all">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest text-on-surface flex items-center justify-center font-bold text-sm">3</div>
+<div class="flex-1">
+<p class="font-label-caps text-label-caps text-on-surface">ByteKnight</p>
+<p class="text-[10px] text-on-surface-variant">Lv. 35 Loop Guardian</p>
+</div>
+<span class="font-code-block text-xs text-primary font-bold">9,450</span>
+</div>
+</div>
+<div class="mt-auto bg-primary/5 p-stack-sm rounded-lg border border-primary/10">
+<div class="flex justify-between items-center mb-2">
+<span class="font-label-caps text-label-caps text-primary">Your Status</span>
+<span class="material-symbols-outlined text-primary text-sm">trending_up</span>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-primary-container text-white flex items-center justify-center font-bold">DC</div>
+<div class="flex-1">
+<p class="font-label-caps text-label-caps">DungeonCoder_99</p>
+<p class="text-[10px] text-on-surface-variant">Rank #1,204</p>
+</div>
+</div>
+</div>
+</aside>
+</div>
+</body></html>

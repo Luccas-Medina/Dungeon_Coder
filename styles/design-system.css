@@ -185,15 +185,6 @@ body {
     box-shadow: var(--shadow-glow-action);
 }
 
-.btn-pause {
-    background: var(--color-event);
-    color: var(--color-bg);
-}
-
-.btn-pause:hover:not(:disabled) {
-    background: var(--color-event-dark);
-}
-
 .btn-clear {
     background: var(--color-danger);
     color: white;
@@ -255,7 +246,7 @@ body {
 /* Main layout */
 .app-container {
     display: grid;
-    grid-template-columns: 20% 50% 30%;
+    grid-template-columns: 2fr 4.5fr 3fr;
     gap: var(--spacing-md);
     padding: var(--spacing-md);
     flex: 1;
@@ -268,6 +259,8 @@ body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 /* Custom scrollbar */
@@ -295,7 +288,7 @@ body {
     }
 
     .palette {
-        max-height: 280px;
+        max-height: 50vh;
         overflow-y: auto;
         flex-shrink: 0;
     }
@@ -387,4 +380,372 @@ body {
         min-height: 450px;
         padding: var(--spacing-sm);
     }
+}
+
+/* ── Light Theme ── */
+html.light {
+    --color-primary: #3525cd;
+    --color-primary-dark: #2a1ea8;
+    --color-primary-light: #4f46e5;
+
+    --color-bg: #f3f3f8;
+    --color-bg-dark: #f9f9fe;
+    --color-bg-light: #ffffff;
+    --color-bg-elevated: #ededf2;
+
+    --color-game-green: #e2e2e7;
+    --color-game-border: #c7c4d8;
+
+    --color-border-purple: #c7c4d8;
+    --color-accent-purple: #ededf2;
+    --color-text-muted: #777587;
+
+    --color-text: #1a1c1f;
+    --color-text-dim: #777587;
+
+    --color-success: #4edea3;
+    --color-danger: #ba1a1a;
+    --color-hole: #ffdad6;
+
+    --color-border: var(--color-border-purple);
+    --color-border-light: #e2e2e7;
+
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+html.light body {
+    background: var(--color-bg-dark);
+    color: var(--color-text);
+}
+
+html.light .app-header {
+    background: var(--color-bg-dark);
+    border-bottom-color: var(--color-border-purple);
+}
+
+html.light .header-brand h1 {
+    color: var(--color-text);
+}
+
+html.light .menu-card {
+    background: var(--color-bg-light);
+    border-color: var(--color-border-purple);
+}
+
+html.light .menu-input {
+    background: var(--color-bg);
+    border-color: var(--color-border-purple);
+    color: var(--color-text);
+}
+
+html.light .menu-btn-rankings {
+    color: var(--color-text-muted);
+    border-color: var(--color-border-purple);
+}
+
+html.light .menu-btn-rankings:hover {
+    background: var(--color-accent-purple);
+    color: var(--color-text);
+}
+
+html.light .menu-btn-play {
+    background: var(--color-primary);
+}
+
+html.light .menu-btn-play:hover:not(:disabled) {
+    background: var(--color-primary-dark);
+}
+
+html.light .palette {
+    background: var(--color-bg-dark);
+    border-color: var(--color-border-purple);
+}
+
+html.light .workspace-container {
+    background: var(--color-bg-dark);
+    border-color: var(--color-border-purple);
+}
+
+html.light .workspace-header {
+    background: var(--color-bg-dark);
+    border-bottom-color: var(--color-border-purple);
+}
+
+html.light .workspace-header h2 {
+    color: var(--color-text);
+}
+
+html.light .workspace {
+    background: var(--color-bg-dark);
+    border-color: var(--color-border-purple);
+}
+
+html.light .workspace.syntax-error {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.05);
+    box-shadow: inset 0 0 20px rgba(239, 68, 68, 0.1);
+}
+
+html.light .workspace .block {
+    border-color: var(--color-border-purple);
+}
+
+html.light .stage-container {
+    background: var(--color-bg-dark);
+    border-color: var(--color-border-purple);
+}
+
+html.light .stage-header {
+    border-bottom-color: var(--color-border-purple);
+}
+
+html.light .stage-header h2 {
+    color: var(--color-text);
+}
+
+html.light .cell {
+    border-color: rgba(0, 0, 0, 0.15);
+}
+
+html.light .cell.path {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+html.light .cell.wall {
+    background: #555568;
+}
+
+html.light .cell.hole {
+    background: #d0c0c8;
+    border-color: #a08090;
+}
+
+html.light .cell.start {
+    background: rgba(217, 79, 15, 0.15);
+}
+
+html.light .stage::before {
+    opacity: 0.35;
+}
+
+html.light .objective-info {
+    background: var(--color-accent-purple);
+    border-color: var(--color-border-purple);
+}
+
+html.light .legend-item {
+    background: var(--color-bg-light);
+    border-color: var(--color-border-purple);
+    color: var(--color-text-muted);
+}
+
+html.light .stage-legend .legend-item {
+    background: var(--color-bg-light);
+}
+
+html.light .modal {
+    background: var(--color-bg-light);
+    border-color: var(--color-border-purple);
+}
+
+html.light .modal h2 {
+    color: var(--color-text);
+}
+
+html.light .header-player input {
+    background: var(--color-bg);
+    border-color: var(--color-border-purple);
+    color: var(--color-text);
+}
+
+html.light .block {
+    background: var(--color-bg-light);
+    border-color: var(--color-border-purple);
+}
+
+html.light .block-action {
+    background: rgba(53, 37, 205, 0.2);
+    border-color: rgba(53, 37, 205, 0.2);
+}
+
+html.light .block-control {
+    background: rgba(255, 140, 0, 0.2);
+    border-color: rgba(255, 140, 0, 0.35);
+}
+
+html.light .block-expression {
+    background: rgba(147, 51, 234, 0.6);
+    border-color: rgba(147, 51, 234, 0.25);
+}
+
+html.light .block-sensor {
+    background: rgba(34, 197, 94, 0.6);
+    border-color: rgba(34, 197, 94, 0.25);
+}
+
+html.light .repeat-body .block-children > .block {
+    background: var(--color-bg-light);
+    border-color: var(--color-border-purple);
+}
+
+html.light .repeat-head {
+    background: var(--color-control);
+    border-color: var(--color-control-dark);
+}
+
+html.light .repeat-body::before,
+html.light .repeat-body::after {
+    background: var(--color-control);
+    border-color: var(--color-control-dark);
+}
+
+html.light .trash-zone {
+    background: rgba(220, 38, 38, 0.06);
+    border-color: rgba(220, 38, 38, 0.3);
+}
+
+html.light .stage .grid {
+    background: transparent;
+}
+
+html.light .level-badge {
+    color: white;
+}
+
+html.light .rankings-view-card {
+    background: var(--color-bg-light);
+    border-color: var(--color-border-purple);
+}
+
+html.light .ranking-item {
+    background: var(--color-bg-dark);
+    border-color: var(--color-border-purple);
+}
+
+html.light .ranking-item:hover {
+    background: var(--color-bg-elevated);
+}
+
+html.light .ranking-tab {
+    background: var(--color-bg);
+    border-color: var(--color-border-purple);
+    color: var(--color-text-muted);
+}
+
+html.light .ranking-tab:hover {
+    background: var(--color-bg-light);
+    color: var(--color-text);
+}
+
+html.light .rank-mode-btn {
+    background: var(--color-bg);
+    border-color: var(--color-border-purple);
+    color: var(--color-text-muted);
+}
+
+html.light .rank-mode-btn:hover {
+    background: var(--color-bg-light);
+    color: var(--color-text);
+    border-color: var(--color-primary);
+}
+
+html.light .rank-nav-btn {
+    background: var(--color-bg);
+    border-color: var(--color-border-purple);
+    color: var(--color-text-muted);
+}
+
+html.light .rank-nav-btn:hover {
+    background: var(--color-bg-light);
+    color: var(--color-text);
+    border-color: var(--color-primary);
+}
+
+html.light .rank-level-display {
+    background: var(--color-bg);
+    border-color: var(--color-border-purple);
+    color: var(--color-text);
+}
+
+html.light .star-tooltip {
+    background: var(--color-bg-light);
+    border-color: var(--color-border-purple);
+}
+
+html.light .star-tooltip::before {
+    background: var(--color-bg-light);
+    border-color: var(--color-border-purple);
+}
+
+html.light .btn-back {
+    color: var(--color-text-muted);
+    border-color: var(--color-border-purple);
+}
+
+html.light .btn-back:hover {
+    background: var(--color-accent-purple);
+    color: var(--color-text);
+}
+
+html.light .workspace-placeholder {
+    border-color: var(--color-border-purple);
+    color: var(--color-text-dim);
+}
+
+html.light .cell.door {
+    background: rgba(139, 69, 19, 0.2);
+    border-color: #8B4513;
+}
+
+html.light .cell.boss {
+    background: linear-gradient(135deg, #e8d0d0, #d8d0e8);
+    border-color: #cc6666;
+}
+
+html.light .cell.boss-octopus {
+    background: linear-gradient(135deg, #d0e0e8, #d0d8e8);
+    border-color: #6688cc;
+}
+
+html.light .cell.boss-devil {
+    background: linear-gradient(135deg, #e8d8d0, #e8d0d0);
+    border-color: #cc8866;
+}
+
+html.light .grid-pattern {
+    background-image: radial-gradient(circle, #c7c4d8 1.5px, transparent 1.5px);
+    opacity: 0.8;
+}
+
+html.light .rankings-view-title {
+    color: var(--color-text);
+}
+
+html.light .actor-emoji {
+    color: #ec5b13;
+}
+
+html.light .block-children:empty {
+    border-color: rgba(255, 140, 0, 0.5);
+}
+
+html.light .block-children:empty::after {
+    color: rgba(255, 140, 0, 0.6);
+}
+
+html.light .menu-title {
+    color: var(--color-text);
+}
+
+@media (max-width: 1024px) {
+    html.light .block .block-label {
+        color: var(--color-text);
+    }
+}
+
+@media (min-width: 1025px) {
+    .lg\:flex { display: flex; }
+    .lg\:hidden { display: none; }
 }

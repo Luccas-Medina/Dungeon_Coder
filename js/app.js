@@ -6,6 +6,10 @@ import { WorkspaceManager } from './components/workspace.js';
 import { PaletteManager } from './components/palette.js';
 import { Stage } from './components/Stage.js';
 import { generateLevel } from './engine/levelGenerator.js';
+import { PlayerStats } from './actors/player.js';
+import { ModalManager } from './ui/modals.js';
+import { Dashboard } from './ui/dashboard.js';
+import { pickRuleForLevel, getRuleDef, RULE_DEFS } from './engine/rules.js';
 
 const MAX_LEVELS = 50;
 const BG_TRACKS = [
@@ -37,6 +41,20 @@ function getLevel(index) {
 function clearLevelCache() {
     levelCache.clear();
     sessionSeed = Date.now();
+}
+
+// ─── Anti-cheat: module-level closures (inaccessible from console) ───
+let _victoryToken = null;
+let _commandHash = null;
+let _statsSnapshot = null;
+
+function _simpleHash(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = ((hash << 5) - hash) + str.charCodeAt(i);
+        hash |= 0;
+    }
+    return Math.abs(hash).toString(36);
 }
 
 const SoundManager = {
@@ -90,6 +108,11 @@ const SoundManager = {
     playAttack() {
         this.playTone(150, 0.2, 'sawtooth', 0.1);
         setTimeout(() => this.playTone(100, 0.15, 'sawtooth', 0.08), 100);
+    },
+
+    playPunch() {
+        this.playTone(70, 0.2, 'sawtooth', 0.15);
+        setTimeout(() => this.playTone(50, 0.15, 'sawtooth', 0.12), 60);
     }
 };
 
@@ -97,11 +120,25 @@ class App {
     constructor() {
         this.currentLevel = 0;
         this.stats = { coins: 0, keys: 0, deaths: 0, score: 0, movements: 0 };
+        this._levelStartStats = null;
+        this.playerId = '';
         this.playerName = '';
         this.bgMuted = false;
         this.rankMode = 'level';
         this.rankLevel = 1;
+        this.playerStats = new PlayerStats();
+        this.modalManager = new ModalManager(this);
+        this.dashboard = new Dashboard();
+        this.currentRule = null;
+        this._gcBaseHp = null;
+        this._gcBaseMaxHp = null;
+        this._pacifistViolation = false;
         this.init();
+    }
+
+    validateStat(value, min, max, def = 0) {
+        if (typeof value !== 'number' || isNaN(value) || !isFinite(value)) return def;
+        return Math.max(min, Math.min(max, Math.floor(Math.abs(value))));
     }
 
     init() {
@@ -137,28 +174,35 @@ class App {
         this.setupEventListeners();
         this.setupBgMusic();
         this.loadProgress();
+        this.runner.playerStats = this.playerStats;
+        this.dashboard.update(this.playerStats);
         this.setupMenuListeners();
         this.setupRankingsViewListeners();
         this.setupStarTooltip();
+        this.setupThemeToggle();
+        this.setupHelpAccordion();
 
         // Pre-fill menu name if saved
         if (this.playerName) {
             document.getElementById('menuPlayerName').value = this.playerName;
             document.getElementById('menuPlayBtn').disabled = false;
         }
+
+        // Auto-restore game if there's saved progress
+        this.autoRestoreIfNeeded();
     }
 
     setupStageCallbacks() {
         this.stage.setCallbacks({
             onCoinCollect: (count) => {
-                this.stats.coins = count;
-                this.stats.score += 100;
+                this.stats.coins = this.validateStat(count, 0, 100);
+                this.stats.score = Math.min(999999, this.stats.score + 100);
                 SoundManager.playCollect();
                 this.updateUI();
             },
             onKeyCollect: () => {
-                this.stats.keys++;
-                this.stats.score += 200;
+                this.stats.keys = Math.min(10, this.stats.keys + 1);
+                this.stats.score = Math.min(999999, this.stats.score + 200);
                 SoundManager.playCollect();
                 this.updateUI();
             },
@@ -169,19 +213,60 @@ class App {
             onHoleFall: () => {
                 this.handleDefeat('Você caiu em um buraco!');
             },
-            onEnemyCollision: () => {
-                this.handleDefeat('Você foi pego por um inimigo!');
+            onEnemyCollision: async () => {
+                await this.handleEnemyDamage(1, 'enemy');
+            },
+            onBossCollision: async (damage) => {
+                await this.handleEnemyDamage(damage || 3, 'boss');
+            },
+            onChestCollect: async (item) => {
+                SoundManager.playCollect();
+                const msg = item === 'sword'
+                    ? ['⚔️ Espada encontrada!', 'Ataque +1']
+                    : item === 'shield'
+                        ? ['🛡️ Escudo encontrado!', 'Carga de escudo +1']
+                        : ['🧪 Poção encontrada!', 'Adicionada ao inventário'];
+                if (item === 'sword') this.playerStats.attack++;
+                if (item === 'shield') this.playerStats.shield++;
+                if (item === 'potion') this.playerStats.inventory.potions++;
+                this.dashboard.update(this.playerStats);
+                this.saveProgress();
+                await this.modalManager.show(msg[0], msg[1]);
             },
             onAttack: () => {
                 SoundManager.playAttack();
             },
             onBossDefeat: () => {
-                this.stats.score += 1000;
+                this.stats.score = Math.min(999999, this.stats.score + 1000);
                 SoundManager.playVictory();
                 this.updateUI();
             },
-            onLevelComplete: () => {
-                this.handleVictory();
+            onPlayerTakeDamage: async (amount, source) => {
+                if (source === 'troll' || source === 'boss') {
+                    SoundManager.playPunch();
+                } else if (source === 'spike') {
+                    SoundManager.playError();
+                }
+                await this.handleEnemyDamage(amount, source);
+            },
+            onEnemyDefeated: (type) => {
+                if (this.currentRule === 'pacifist') {
+                    this._pacifistViolation = true;
+                    this.handleDefeat('Você violou o Pacifista de Ferro! Um inimigo foi derrotado.');
+                    return;
+                }
+                if (this.currentRule === 'vampire') {
+                    this.playerStats.hp = this.playerStats.maxHp;
+                    this.dashboard.update(this.playerStats);
+                }
+                const points = { bat: 50, skeleton: 100, troll: 150 };
+                this.stats.score += points[type] || 50;
+                this.updateUI();
+            },
+            onGetPlayerAttack: () => {
+                let atk = this.playerStats.attack || 1;
+                if (this.currentRule === 'glass_cannon') atk *= 2;
+                return atk;
             }
         });
     }
@@ -190,6 +275,16 @@ class App {
         this.runner.setCallbacks({
             onComplete: () => {
                 this.setButtonsEnabled(false);
+                if (this._pacifistViolation) {
+                    return;
+                }
+                if (this.stage.didReachDoor && this.stage.didReachDoor()) {
+                    const extraBlocks = Math.max(0, (this._currentCommandCount || 0) - ((this.runner.doorReachedIndex || 0) + 1));
+                    this.stats.score = Math.max(0, this.stats.score - extraBlocks * 10);
+                    this.handleVictory();
+                } else {
+                    this.handleLevelFailed();
+                }
             },
             onError: (error) => {
                 this.setButtonsEnabled(false);
@@ -198,6 +293,33 @@ class App {
                 this.highlightBlock(index);
             }
         });
+        this.runner.onUsePotion = () => {
+            if (!this.playerStats.usePotion()) return;
+            this.stage.healGlow();
+            this.dashboard.update(this.playerStats);
+            this.saveProgress();
+        };
+        this.runner.onUseShield = () => {
+            if (this.playerStats.shield > 0 && this.stage.isPlayerUnderAttack()) {
+                this.playerStats.shield--;
+                this.stage.shieldBlockNextHit = true;
+                this.dashboard.update(this.playerStats);
+                this.saveProgress();
+            }
+        };
+        this.runner.onVampireTick = () => {
+            this.playerStats.takeDamage(1);
+            this.dashboard.update(this.playerStats);
+            this.dashboard.damageFlash();
+            this.saveProgress();
+            if (this.playerStats.hp <= 0) {
+                this.handleDefeat('Você sucumbiu à Maldição do Vampiro!');
+            }
+        };
+        this.runner.onPacifistAttack = () => {
+            this._pacifistViolation = true;
+            this.handleDefeat('Você violou o Pacifista de Ferro! O bloco Atacar não pode ser usado.');
+        };
     }
 
     setupEventListeners() {
@@ -206,12 +328,22 @@ class App {
         document.getElementById('btnPlayMobile').addEventListener('click', () => this.runCode());
         document.getElementById('btnRunDesktop').addEventListener('click', () => this.runCode());
         
-        // Pause buttons
-        document.getElementById('btnPause').addEventListener('click', () => this.togglePause());
-        document.getElementById('btnPauseDesktop').addEventListener('click', () => this.togglePause());
-        
-        // Clear buttons
-        document.getElementById('btnClear').addEventListener('click', () => this.workspaceManager.clear());
+        // Clear button
+        document.getElementById('btnClear').addEventListener('click', () => {
+            if (this.runner.isRunning) {
+                const btn = document.getElementById('btnClear');
+                btn.classList.add('shake');
+                setTimeout(() => btn.classList.remove('shake'), 500);
+                return;
+            }
+            _victoryToken = null;
+            _commandHash = null;
+            _statsSnapshot = null;
+            this.runner.stop();
+            this.stage.stopAI();
+            this.workspaceManager.clear();
+            this.setButtonsEnabled(false);
+        });
         
         // Reset buttons
         document.getElementById('btnResetLevel').addEventListener('click', () => this.loadLevel(this.currentLevel));
@@ -219,11 +351,13 @@ class App {
         
         // Level navigation
         document.getElementById('btnPrevLevel').addEventListener('click', () => {
+            if (this.runner.isRunning) return;
             if (this.currentLevel > 0) {
                 this.loadLevel(this.currentLevel - 1);
             }
         });
         document.getElementById('btnNextLevel').addEventListener('click', () => {
+            if (this.runner.isRunning) return;
             if (this.currentLevel < MAX_LEVELS - 1) {
                 this.loadLevel(this.currentLevel + 1);
             }
@@ -236,12 +370,27 @@ class App {
             if (this.runner.isRunning) return;
             this.pauseBgMusic();
             this.workspaceManager.saveToStorage();
-            Storage.saveContinueState({
-                level: this.currentLevel,
-                stats: { ...this.stats },
-                stage: this.stage.getState()
-            });
+            this.saveProgress();
             this.showView('menu');
+        });
+
+        // Pause/resume on tab visibility change
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                this.stage.stopAI();
+                this.pauseBgMusic();
+                if (SoundManager.context) SoundManager.context.suspend();
+            } else {
+                if (SoundManager.context && SoundManager.context.state === 'suspended') {
+                    SoundManager.context.resume();
+                }
+            }
+        });
+
+        // Save state on page close/refresh
+        window.addEventListener('beforeunload', () => {
+            this.saveProgress();
+            this.workspaceManager.saveToStorage();
         });
     }
 
@@ -274,11 +423,14 @@ class App {
                 errorEl.classList.add('show');
                 return;
             }
-            this.playerName = name;
-            document.getElementById('playerName').value = name;
+            this.playerName = (typeof name === 'string') ? name.trim().slice(0, 20) : '';
+            this.playerId = Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
+            Storage.savePlayerRecord(this.playerId, this.playerName);
+            document.getElementById('playerName').value = this.playerName;
             this.stats = { coins: 0, keys: 0, deaths: 0, score: 0, movements: 0 };
+            this.playerStats.reset();
+            this.dashboard.update(this.playerStats);
             this.currentLevel = 0;
-            Storage.clearContinueState();
             clearLevelCache();
             this.bgMuted = false;
             document.getElementById('soundIcon').textContent = 'volume_up';
@@ -362,33 +514,41 @@ class App {
     }
 
     refreshMenu() {
-        const continueState = Storage.loadContinueState();
+        const saved = Storage.loadProgress();
         const btn = document.getElementById('menuContinueBtn');
-        btn.style.display = continueState ? '' : 'none';
+        btn.style.display = (saved && saved.playerName && saved.level !== undefined) ? '' : 'none';
     }
 
     resumeFromContinue() {
-        const continueState = Storage.loadContinueState();
-        if (!continueState) return;
+        const saved = Storage.loadProgress();
+        if (!saved) return;
 
-        this.currentLevel = continueState.level;
-        this.playerName = document.getElementById('playerName').value || this.playerName;
+        const menuName = document.getElementById('menuPlayerName')?.value?.trim();
+        this.playerName = menuName || saved.playerName || 'Jogador Anônimo';
+        this.playerId = saved.playerId || '';
+        document.getElementById('playerName').value = this.playerName;
+
+        this.currentLevel = this.validateStat(saved.level, 0, 49);
+        this.stats = {
+            coins: this.validateStat(saved.coins, 0, 100),
+            keys: this.validateStat(saved.keys, 0, 10),
+            deaths: this.validateStat(saved.deaths, 0, 9999),
+            score: this.validateStat(saved.score, 0, 999999),
+            movements: this.validateStat(saved.movements, 0, 9999)
+        };
+
+        if (saved.playerStats) {
+            this.playerStats = new PlayerStats(saved.playerStats);
+            this.runner.playerStats = this.playerStats;
+        }
+        this.dashboard.update(this.playerStats);
 
         this.showView('game');
-
-        if (continueState.stage) {
-            this.stats = { ...continueState.stats };
-            this.stage.restoreState(continueState.stage);
-            this.workspaceManager.restoreFromStorage();
-        } else {
-            this.loadLevel(this.currentLevel);
-        }
-
+        this.loadLevel(this.currentLevel);
+        this.workspaceManager.restoreFromStorage();
         this.playBgMusic();
-
         this.updateUI();
         this.displayRankings();
-        this.saveProgress();
     }
 
     setupBgMusic() {
@@ -396,6 +556,10 @@ class App {
         this.bgMusic = new Audio();
         this.bgMusic.loop = true;
         this.bgMusic.volume = 0.4;
+        this.bgMusic.onerror = () => {
+            console.warn('[Block Engine] Audio falhou, pulando para próxima track');
+            this.nextBgTrack();
+        };
 
         document.getElementById('soundToggle').addEventListener('click', () => {
             this.toggleBgMusic();
@@ -419,9 +583,18 @@ class App {
         }
     }
 
+    nextBgTrack() {
+        this.bgMusic.onerror = null;
+        this.pickRandomTrack();
+        if (!this.bgMuted) {
+            this.bgMusic.play().catch(() => { this.bgMusic.onerror = () => this.nextBgTrack(); });
+        }
+        this.bgMusic.onerror = () => this.nextBgTrack();
+    }
+
     pickRandomBg() {
         const file = IMAGE_FILES[Math.floor(Math.random() * IMAGE_FILES.length)];
-        document.querySelector('.stage').style.setProperty('--stage-bg', `url('/Dungeon_Coder/images/${file}')`);
+        document.querySelector('.stage').style.setProperty('--stage-bg', `url('/teste-block-engine-mvp/images/${file}')`);
     }
 
     playBgMusic() {
@@ -455,35 +628,65 @@ class App {
     loadProgress() {
         const saved = Storage.loadProgress();
         if (saved) {
-            this.currentLevel = saved.level ?? 0;
-            this.stats.coins = saved.coins ?? 0;
-            this.stats.keys = saved.keys ?? 0;
-            this.stats.deaths = saved.deaths ?? 0;
-            this.stats.score = saved.score ?? 0;
-            this.stats.movements = saved.movements ?? 0;
-            this.playerName = saved.playerName ?? '';
+            this.currentLevel = this.validateStat(saved.level, 0, 49);
+            this.stats.coins = this.validateStat(saved.coins, 0, 100);
+            this.stats.keys = this.validateStat(saved.keys, 0, 10);
+            this.stats.deaths = this.validateStat(saved.deaths, 0, 9999);
+            this.stats.score = this.validateStat(saved.score, 0, 999999);
+            this.stats.movements = this.validateStat(saved.movements, 0, 9999);
+            this.playerId = (typeof saved.playerId === 'string') ? saved.playerId : '';
+            this.playerName = (typeof saved.playerName === 'string') ? saved.playerName.trim().slice(0, 20) || 'Jogador Anônimo' : 'Jogador Anônimo';
+            this.playerStats = new PlayerStats(saved.playerStats);
             document.getElementById('playerName').value = this.playerName;
         }
     }
 
     saveProgress() {
-        this.playerName = document.getElementById('playerName').value.trim();
+        this.playerName = (typeof this.playerName === 'string') ? this.playerName.trim().slice(0, 20) : '';
+        let stats = this.playerStats.toJSON();
+        if (this.currentRule === 'glass_cannon' && this._gcBaseMaxHp !== null) {
+            stats.maxHp = this._gcBaseMaxHp;
+            stats.hp = Math.min(stats.hp, this._gcBaseMaxHp);
+        }
         Storage.saveProgress({
-            level: this.currentLevel,
-            coins: this.stats.coins,
-            keys: this.stats.keys,
-            deaths: this.stats.deaths,
-            score: this.stats.score,
-            movements: this.stats.movements,
-            playerName: this.playerName
+            level: this.validateStat(this.currentLevel, 0, 49),
+            coins: this.validateStat(this.stats.coins, 0, 100),
+            keys: this.validateStat(this.stats.keys, 0, 10),
+            deaths: this.validateStat(this.stats.deaths, 0, 9999),
+            score: this.validateStat(this.stats.score, 0, 999999),
+            movements: this.validateStat(this.stats.movements, 0, 9999),
+            playerId: this.playerId,
+            playerName: this.playerName,
+            playerStats: stats
         });
     }
 
     loadLevel(index) {
         if (index < 0 || index >= MAX_LEVELS) return;
-        this.currentLevel = index;
+        _victoryToken = null;
+        _commandHash = null;
+        _statsSnapshot = null;
+        this.runner.stop();
+        this.stage.stopAI();
+        this.currentLevel = this.validateStat(index, 0, 49);
         this.stats.coins = 0;
         this.stats.keys = 0;
+
+        this._levelStartStats = {
+            score: this.stats.score,
+            deaths: this.stats.deaths,
+            movements: this.stats.movements
+        };
+
+        this._pacifistViolation = false;
+
+        if (this.currentRule === 'glass_cannon' && this._gcBaseMaxHp !== null) {
+            this.playerStats.maxHp = this._gcBaseMaxHp;
+            this.playerStats.hp = this._gcBaseHp;
+        }
+        this._gcBaseHp = null;
+        this._gcBaseMaxHp = null;
+        this.currentRule = null;
 
         const levelData = getLevel(index);
         const levelCopy = {
@@ -500,10 +703,43 @@ class App {
             levelCopy.boss = { ...levelData.boss };
         }
 
-        this.stage.loadLevel(levelCopy);
+        if (levelData.spikes) {
+            levelCopy.spikes = levelData.spikes.map(s => ({ ...s }));
+        }
+
+        this.stage.shieldBlockNextHit = false;
+
+        this.applyLevelRule(index);
+        this.stage.currentRule = this.currentRule;
+        this.runner.currentRule = this.currentRule;
+
+        this.stage.loadLevel(levelCopy, this.currentLevel);
+        this.stage.startAI();
         this.updateUI();
         this.updateStarsUI();
+        this.dashboard.update(this.playerStats);
+        this.showChestTip();
         this.saveProgress();
+    }
+
+    applyLevelRule(index) {
+        this.currentRule = pickRuleForLevel(index, sessionSeed);
+
+        const gridEl = document.getElementById('grid');
+        if (this.currentRule === 'mirror') {
+            gridEl.style.filter = 'invert(1) hue-rotate(180deg)';
+        } else {
+            gridEl.style.filter = '';
+        }
+
+        this.runner.currentRule = this.currentRule;
+
+        if (this.currentRule === 'glass_cannon') {
+            this._gcBaseMaxHp = this.playerStats.maxHp;
+            this._gcBaseHp = this.playerStats.hp;
+            this.playerStats.maxHp = 1;
+            this.playerStats.hp = Math.min(this.playerStats.hp, 1);
+        }
     }
 
     countMovements(commands) {
@@ -511,8 +747,13 @@ class App {
         for (const cmd of commands) {
             if (['moveUp', 'moveDown', 'moveLeft', 'moveRight'].includes(cmd.type)) {
                 count++;
-            } else if (cmd.type === 'repeat' && cmd.children.length > 0) {
+            } else if (cmd.type === 'repetir' && cmd.children?.length > 0) {
                 count += (cmd.params.times ?? 2) * this.countMovements(cmd.children);
+            } else if (cmd.type === 'se') {
+                if (cmd.children?.length > 0) count += this.countMovements(cmd.children);
+                if (cmd.elseChildren?.length > 0) count += this.countMovements(cmd.elseChildren);
+            } else if (cmd.type === 'enquanto' && cmd.children?.length > 0) {
+                count += this.countMovements(cmd.children);
             }
         }
         return count;
@@ -521,12 +762,37 @@ class App {
     async runCode() {
         if (this.runner.isRunning) return;
 
-        // Reset runner state before new run
+        // Clear any stale anti-cheat tokens
+        _victoryToken = null;
+        _commandHash = null;
+        _statsSnapshot = null;
+
         this.runner.stop();
-        
+        this.stage.startAI();
+        this.stage.shieldBlockNextHit = false;
+
         SoundManager.init();
 
+        if (this.currentRule === 'economic') {
+            const blockCount = this.workspaceManager.getBlockCount();
+            const maxBlocks = getRuleDef('economic').maxBlocks;
+            if (blockCount > maxBlocks) {
+                this.showMessage('Limite de blocos!', `Regra "Programação Econômica": máximo ${maxBlocks} blocos permitidos. Use ${maxBlocks} ou menos.`);
+                this._modalAction = () => this.hideModal();
+                this._modalSecondaryAction = null;
+                return;
+            }
+        }
+
+        if (!this.workspaceManager.validateSyntax()) {
+            this.showMessage('Erro de sintaxe!', 'Corrija os blocos antes de executar: "Então" deve estar dentro de um bloco "Se".');
+            this._modalAction = () => this.hideModal();
+            this._modalSecondaryAction = null;
+            return;
+        }
+
         const commands = this.parser.parse(document.getElementById('workspace'));
+        this._currentCommandCount = commands.length;
         this.currentRunMovements = this.countMovements(commands);
 
         if (commands.length === 0) {
@@ -536,22 +802,25 @@ class App {
             return;
         }
 
+        // ─── Anti-cheat: seal the session ───
+        _victoryToken = {
+            level: this.currentLevel,
+            cmdCount: commands.length,
+            id: Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10)
+        };
+        _commandHash = _simpleHash(JSON.stringify(commands));
+        _statsSnapshot = {
+            score: this.stats.score,
+            deaths: this.stats.deaths,
+            movements: this.stats.movements,
+            coins: this.stats.coins,
+            keys: this.stats.keys
+        };
+        // ──────────────────────────────────────
+
+        this.runner.currentRule = this.currentRule;
         this.setButtonsEnabled(true);
-        document.getElementById('btnPause').disabled = false;
-
         await this.runner.run(commands);
-    }
-
-    togglePause() {
-        if (!this.runner.isRunning) return;
-
-        if (this.runner.isPaused) {
-            this.runner.resume();
-            document.getElementById('btnPause').textContent = '⏸ Pausar';
-        } else {
-            this.runner.pause();
-            document.getElementById('btnPause').textContent = '▶ Retomar';
-        }
     }
 
     highlightBlock(index) {
@@ -562,32 +831,112 @@ class App {
         }
     }
 
+    _rejectCheat(msg) {
+        _victoryToken = null;
+        _commandHash = null;
+        _statsSnapshot = null;
+        this.runner.kill();
+        this.stage.stopAI();
+        this.setButtonsEnabled(false);
+        SoundManager.playError();
+        this.showMessage('🚫 Invasão Detectada!', `${msg} Todas as ações foram bloqueadas.`, 'OK');
+        this._modalAction = () => this.hideModal();
+        this._modalSecondaryAction = null;
+    }
+
     handleVictory() {
+        // ─── Anti-cheat: verify session integrity ───
+        if (!_victoryToken || !_commandHash) {
+            this._rejectCheat('Sessão inválida. Use o botão "Jogar" para executar os blocos.');
+            return;
+        }
+
+        if (_victoryToken.level !== this.currentLevel) {
+            this._rejectCheat('Nível incorreto detectado.');
+            return;
+        }
+
+        try {
+            const currentHash = _simpleHash(JSON.stringify(this.parser.parse(document.getElementById('workspace'))));
+            if (currentHash !== _commandHash) {
+                this._rejectCheat('Os blocos foram modificados durante a execução.');
+                return;
+            }
+        } catch {
+            this._rejectCheat('Erro ao verificar a integridade dos blocos.');
+            return;
+        }
+
+        if (_statsSnapshot) {
+            const earnedDuringRun = {
+                score: this.stats.score - _statsSnapshot.score,
+                deaths: this.stats.deaths - _statsSnapshot.deaths,
+                movements: this.stats.movements - _statsSnapshot.movements,
+            };
+            if (earnedDuringRun.deaths < 0 || earnedDuringRun.movements < 0) {
+                this._rejectCheat('Estatísticas inválidas detectadas (valores negativos).');
+                return;
+            }
+            const levelData = getLevel(this.currentLevel);
+            if (levelData) {
+                const coinCount = levelData.map.flat().filter(c => c === 'coin').length;
+                const keyCount = levelData.map.flat().filter(c => c === 'key').length;
+                const enemyCount = levelData.enemies?.length || 0;
+                const hasBoss = !!levelData.boss;
+                const maxLegitScore = coinCount * 100 + keyCount * 200 + 500 +
+                    (hasBoss ? 1000 : 0) + enemyCount * 150 + 200;
+                if (earnedDuringRun.score > maxLegitScore) {
+                    this._rejectCheat('Pontuação inválida detectada. O score excede o máximo possível para esta fase.');
+                    return;
+                }
+            }
+        }
+
+        // Single-use token invalidation
+        _victoryToken = null;
+        _commandHash = null;
+        _statsSnapshot = null;
+        // ─────────────────────────────────────────────
+
+        const blockCount = this.workspaceManager.getBlockCount();
+        this.stage.stopAI();
         this.runner.stop();
         this.workspaceManager.clear();
         SoundManager.playVictory();
-        this.stats.score += 500;
-        this.stats.movements += this.currentRunMovements || 0;
+        this.stats.score = Math.min(999999, this.stats.score + 500);
+        this.stats.movements = Math.min(9999, this.stats.movements + (this.validateStat(this.currentRunMovements, 0, 9999) || 0));
         this.setButtonsEnabled(false);
         this.changeBgMusic();
         this.pickRandomBg();
 
-        const playerName = document.getElementById('playerName').value.trim() || 'Anônimo';
+        const playerName = (typeof document.getElementById('playerName').value === 'string')
+            ? document.getElementById('playerName').value.trim().slice(0, 20) || 'Anônimo'
+            : 'Anônimo';
 
-        Storage.addRankingEntry({
+        const start = this._levelStartStats || { score: 0, deaths: 0, movements: 0 };
+        const entry = {
+            playerId: this.playerId,
             name: playerName,
-            score: this.stats.score,
-            level: this.currentLevel + 1,
-            deaths: this.stats.deaths,
-            movements: this.stats.movements
-        });
+            score: this.validateStat(this.stats.score - start.score, 0, 999999),
+            level: this.validateStat(this.currentLevel + 1, 1, 50),
+            deaths: this.validateStat(this.stats.deaths - start.deaths, 0, 9999),
+            movements: this.validateStat(this.stats.movements - start.movements, 0, 9999),
+            blocks: blockCount
+        };
 
-        // Calculate stars
-        const earnedStars = 1 + (this.stats.deaths === 0 ? 1 : 0) + (this.currentRunMovements <= 20 ? 1 : 0);
-        const starResult = Storage.saveStars(this.currentLevel + 1, {
+        const levelData = getLevel(this.currentLevel);
+        if (Storage.validateRankingEntry(entry, levelData)) {
+            Storage.addRankingEntry(entry);
+        }
+
+        // Calculate stars (per-level stats only)
+        const levelDeaths = this.stats.deaths - (start.deaths || 0);
+        const levelMovements = this.stats.movements - (start.movements || 0);
+        const earnedStars = 1 + (levelDeaths === 0 ? 1 : 0) + (this.currentRunMovements <= 20 ? 1 : 0);
+        const starResult = Storage.saveStars(this.playerId, this.currentLevel + 1, {
             earned: earnedStars,
-            deaths: this.stats.deaths,
-            movements: this.stats.movements
+            deaths: levelDeaths,
+            movements: levelMovements
         });
 
         if (this.currentLevel < MAX_LEVELS - 1) {
@@ -614,6 +963,13 @@ class App {
             this._modalSecondaryAction = null;
         }
 
+        // Restore original stats if leaving Glass Cannon
+        if (this.currentRule === 'glass_cannon' && this._gcBaseMaxHp !== null) {
+            this.playerStats.maxHp = this._gcBaseMaxHp;
+            this.playerStats.hp = this._gcBaseHp;
+            this.dashboard.update(this.playerStats);
+        }
+
         // Animate stars in modal and show record badge
         document.getElementById('modalStars').classList.remove('hidden');
         setTimeout(() => this.animateModalStars(earnedStars, starResult?.isRecord), 300);
@@ -621,6 +977,35 @@ class App {
         this.saveProgress();
         this.displayRankings();
         this.updateStarsUI();
+    }
+
+    handleLevelFailed() {
+        _victoryToken = null;
+        _commandHash = null;
+        _statsSnapshot = null;
+        this.stage.stopAI();
+        this.stage.resetDoorFlag();
+        this.playerStats.takeDamage(1);
+        this.dashboard.update(this.playerStats);
+        this.dashboard.damageFlash();
+        this.setButtonsEnabled(false);
+        this.saveProgress();
+
+        if (this.playerStats.hp <= 0) {
+            this.handleDefeat('Você não conseguiu concluir a fase a tempo!');
+            return;
+        }
+
+        this.showMessage(
+            '❌ Fase não concluída!',
+            'Você não chegou à porta. Reorganize seus blocos e tente novamente!',
+            'OK'
+        );
+        this._modalAction = () => {
+            this.hideModal();
+            this.loadLevel(this.currentLevel);
+        };
+        this._modalSecondaryAction = null;
     }
 
     animateModalStars(earnedStars, isRecord) {
@@ -650,32 +1035,79 @@ class App {
         }
     }
 
+    async handleEnemyDamage(amount, source) {
+        if (this._damageLock) return;
+        this._damageLock = true;
+        try {
+            if (source !== 'spike' && this.stage.shieldBlockNextHit) {
+                this.stage.shieldBlockNextHit = false;
+                return;
+            }
+
+            const hpBefore = this.playerStats.hp;
+            this.playerStats.takeDamage(amount);
+            this.dashboard.update(this.playerStats);
+            this.dashboard.damageFlash();
+            this.saveProgress();
+            if (this.playerStats.hp <= 0) {
+                const msg = source === 'bat' ? 'Você foi derrotado por um Morcego!'
+                    : source === 'skeleton' ? 'Você foi atingido por uma flecha!'
+                    : source === 'troll' ? 'Você foi esmagado por uma pedra!'
+                    : source === 'boss' ? 'Você foi derrotado pelo Boss!'
+                    : source === 'spike' ? 'Você foi empalado por espinhos!'
+                    : 'Você foi derrotado!';
+                this.handleDefeat(msg);
+            } else if (this.runner.isRunning) {
+                const hpLoss = hpBefore - this.playerStats.hp;
+                const sourceNames = {
+                    bat: '🦇 Morcego!',
+                    skeleton: '💀 Esqueleto!',
+                    troll: '🗿 Troll de Pedra!',
+                    boss: '👹 Boss!',
+                    enemy: '👾 Inimigo!',
+                    spike: '🔺 Espinhos!'
+                };
+                await this.modalManager.show(sourceNames[source] || '💥 Ataque!',
+                    `Sofreu ${hpLoss} de dano! HP: ${this.playerStats.hp}/${this.playerStats.maxHp}`);
+            }
+        } finally {
+            this._damageLock = false;
+        }
+    }
+
     handleDefeat(message) {
-        // Kill switch - stop all execution immediately
+        _victoryToken = null;
+        _commandHash = null;
+        _statsSnapshot = null;
+        this.stage.stopAI();
         this.runner.kill();
-        Storage.clearContinueState();
-        
+        this.workspaceManager.clear();
+
         SoundManager.playError();
-        this.stats.deaths++;
-        this.stats.score = Math.max(0, this.stats.score - 50);
+        this.stats.deaths = Math.min(9999, this.stats.deaths + 1);
+        this.stats.score = Math.max(0, Math.min(999999, this.stats.score - 50));
+        this.playerStats.reset();
+        this.dashboard.update(this.playerStats);
         this.setButtonsEnabled(false);
 
         this.showMessage(
             '💀 Derrota!',
-            `${message} Tentativas falhas: ${this.stats.deaths}`,
-            'Tentar Novamente'
+            `${message} Todo o progresso foi perdido. Inicie um novo jogo.`,
+            'Menu Principal'
         );
 
         this._modalAction = () => {
             this.hideModal();
             this.pauseBgMusic();
+            Storage.clearProgress();
+            this.currentLevel = 0;
+            this.playerName = '';
+            this.playerId = '';
+            this.stats = { coins: 0, keys: 0, deaths: 0, score: 0, movements: 0 };
             this.showView('menu');
         };
 
         this._modalSecondaryAction = null;
-
-        this.saveProgress();
-        this.displayRankings();
     }
 
     handleModalPrimary() {
@@ -714,14 +1146,17 @@ class App {
         document.getElementById('btnPlay').disabled = enabled;
         document.getElementById('btnPlayMobile').disabled = enabled;
         document.getElementById('btnRunDesktop').disabled = enabled;
-        document.getElementById('btnPause').disabled = !enabled;
-        document.getElementById('btnPauseDesktop').disabled = !enabled;
     }
 
     updateUI() {
         const levelNum = this.currentLevel + 1;
         document.getElementById('levelBadge').textContent = `Fase ${levelNum}`;
-        document.getElementById('stageLevelTitle').textContent = `Level ${levelNum}: ${getLevel(this.currentLevel).name}`;
+        const ruleDef = getRuleDef(this.currentRule);
+        const ruleDisplay = ruleDef ? `${ruleDef.icon} ${ruleDef.name}` : 'Fase sem regras especiais';
+        const ruleTitle = ruleDef ? ruleDef.hover : '';
+        const titleEl = document.getElementById('stageLevelTitle');
+        titleEl.textContent = `Fase ${levelNum}: ${ruleDisplay}`;
+        titleEl.title = ruleTitle;
         
         // Update objective info
         const levelData = getLevel(this.currentLevel);
@@ -734,7 +1169,7 @@ class App {
     }
 
     updateStarsUI() {
-        const stars = Storage.getLevelStars(this.currentLevel + 1);
+        const stars = Storage.getLevelStars(this.playerId, this.currentLevel + 1);
         for (let i = 0; i < 3; i++) {
             const starEl = document.getElementById(`headerStar${i + 1}`);
             if (starEl) {
@@ -759,8 +1194,8 @@ class App {
 
     updateStarTooltip() {
         const tooltip = document.getElementById('starTooltip');
-        const stars = Storage.getLevelStars(this.currentLevel + 1);
         if (!tooltip) return;
+        const stars = Storage.getLevelStars(this.playerId, this.currentLevel + 1);
         for (let i = 0; i < 3; i++) {
             const icon = document.getElementById(`tipStar${i + 1}`);
             if (!icon) continue;
@@ -778,19 +1213,161 @@ class App {
         tooltip.classList.add('show');
     }
 
+    showChestTip() {
+        if (Storage.loadEncrypted('agentica_chest_tip_shown')) return;
+        const levelNum = this.currentLevel + 1;
+        if (levelNum % 3 !== 1) return;
+        if (getLevel(this.currentLevel)?.boss) return;
+        Storage.saveEncrypted('agentica_chest_tip_shown', '1');
+        const toast = document.createElement('div');
+        toast.className = 'chest-tip';
+        toast.textContent = '🧰 Baú! Aproxime-se para abrir e ganhar itens!';
+        document.getElementById('gameWrapper').appendChild(toast);
+        requestAnimationFrame(() => toast.classList.add('show'));
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    }
+
+    setupThemeToggle() {
+        const html = document.documentElement;
+        const homeBtn = document.getElementById('themeToggleHome');
+        const gameBtn = document.getElementById('themeToggleGame');
+
+        const saved = Storage.loadEncrypted('agentica_theme');
+        if (saved === 'light') {
+            html.classList.add('light');
+            this.updateThemeIcons(true);
+        }
+
+        const toggle = (isLight) => {
+            html.classList.toggle('light', isLight);
+            Storage.saveEncrypted('agentica_theme', isLight ? 'light' : 'dark');
+            this.updateThemeIcons(isLight);
+        };
+
+        homeBtn?.addEventListener('click', () => toggle(!html.classList.contains('light')));
+        gameBtn?.addEventListener('click', () => toggle(!html.classList.contains('light')));
+    }
+
+    updateThemeIcons(isLight) {
+        const icon = isLight ? 'dark_mode' : 'light_mode';
+        document.querySelectorAll('.btn-theme .material-symbols-outlined').forEach(el => {
+            el.textContent = icon;
+        });
+    }
+
+    setupHelpAccordion() {
+        const overlay = document.getElementById('helpOverlay');
+        const modal = document.getElementById('helpModal');
+        const closeBtn = document.getElementById('helpCloseBtn');
+        const gotItBtn = document.getElementById('helpGotItBtn');
+
+        // Accordion toggle
+        document.querySelectorAll('.accordion-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const targetId = header.dataset.target;
+                const body = document.getElementById(targetId);
+                if (!body) return;
+
+                const isOpen = body.classList.contains('open');
+                body.classList.toggle('open');
+                header.classList.toggle('open');
+
+                // Close others
+                document.querySelectorAll('.accordion-body.open').forEach(other => {
+                    if (other.id !== targetId) {
+                        other.classList.remove('open');
+                        other.previousElementSibling?.classList.remove('open');
+                    }
+                });
+            });
+        });
+
+        // Open help from menu
+        document.querySelectorAll('#menuHelpBtn, #btnHelp').forEach(btn => {
+            btn?.addEventListener('click', () => {
+                overlay.hidden = false;
+            });
+        });
+
+        // Close handlers
+        const close = () => {
+            overlay.hidden = true;
+            document.querySelectorAll('.accordion-body.open, .accordion-header.open').forEach(el => {
+                el.classList.remove('open');
+            });
+        };
+
+        closeBtn?.addEventListener('click', close);
+        gotItBtn?.addEventListener('click', close);
+
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) close();
+        });
+    }
+
+    autoRestoreIfNeeded() {
+        const saved = Storage.loadProgress();
+        if (!saved) return;
+
+        document.getElementById('playerName').value = this.playerName;
+        this.showView('game');
+        this.loadLevel(this.currentLevel);
+        this.pickRandomTrack();
+        this.pickRandomBg();
+        this.playBgMusic();
+        this.updateUI();
+        this.displayRankings();
+    }
+
     displayRankings(mode, level) {
         if (mode !== undefined) this.rankMode = mode;
         if (level !== undefined) this.rankLevel = level;
 
         if (this.rankMode === 'global') {
             this.renderRankingList('viewRankingScoreList', Storage.getAggregatedRankingsByScore(), 'score', true);
-            this.renderRankingList('viewRankingDeathsList', Storage.getAggregatedRankingsByDeaths(), 'deaths', false);
+            this.renderRankingList('viewRankingBlocksList', Storage.getAggregatedRankingsByBlocks(), 'blocks', false);
             this.renderRankingList('viewRankingMovementsList', Storage.getAggregatedRankingsByMovements(), 'movements', false);
         } else {
             this.renderRankingList('viewRankingScoreList', Storage.getRankingsByScoreForLevel(this.rankLevel), 'score', true, this.rankLevel);
-            this.renderRankingList('viewRankingDeathsList', Storage.getRankingsByDeathsForLevel(this.rankLevel), 'deaths', false, this.rankLevel);
+            this.renderRankingList('viewRankingBlocksList', Storage.getRankingsByBlocksForLevel(this.rankLevel), 'blocks', false, this.rankLevel);
             this.renderRankingList('viewRankingMovementsList', Storage.getRankingsByMovementsForLevel(this.rankLevel), 'movements', false, this.rankLevel);
         }
+        this.renderPlayerList();
+    }
+
+    renderPlayerList() {
+        const container = document.getElementById('viewRankingPlayersList');
+        if (!container) return;
+        container.innerHTML = '';
+
+        const players = Storage.getAllPlayerEntries();
+        if (players.length === 0) {
+            container.innerHTML = '<div class="ranking-empty">Nenhum jogador registrado ainda</div>';
+            return;
+        }
+
+        players.forEach((player, index) => {
+            const item = document.createElement('div');
+            item.className = 'ranking-item';
+
+            const isCurrentPlayer = player.playerId === this.playerId && this.playerId;
+            if (isCurrentPlayer) item.classList.add('current-player');
+
+            const firstDate = new Date(player.firstPlayed).toLocaleDateString('pt-BR');
+            const lastDate = new Date(player.lastPlayed).toLocaleDateString('pt-BR');
+
+            item.innerHTML = `
+                <span class="ranking-position">${index + 1}º</span>
+                <span class="ranking-name">${player.playerName}</span>
+                <span class="ranking-value">🎮</span>
+                <span class="ranking-level">Primeiro: ${firstDate}</span>
+            `;
+
+            container.appendChild(item);
+        });
     }
 
     renderRankingList(containerId, rankings, metric, isScore, level) {
@@ -818,7 +1395,7 @@ class App {
             item.className = 'ranking-item';
 
             if (entry.perfect) item.classList.add('perfect');
-            const isCurrentPlayer = entry.name === this.playerName && this.playerName;
+            const isCurrentPlayer = entry.playerId === this.playerId && this.playerId;
             if (isCurrentPlayer) item.classList.add('current-player');
 
             const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}º`;
@@ -826,8 +1403,8 @@ class App {
             let valueText = '';
             if (isScore) {
                 valueText = `${entry.score} pts`;
-            } else if (metric === 'deaths') {
-                valueText = `${entry.deaths} mortes`;
+            } else if (metric === 'blocks') {
+                valueText = `${entry.blocks ?? 0} blocos`;
             } else {
                 valueText = `${entry.movements} movimentos`;
             }
@@ -841,8 +1418,8 @@ class App {
                 } else if (metric === 'movements' && benchmark.optimalMoves > 0) {
                     const pct = Math.round((benchmark.optimalMoves / Math.max(entry.movements, 1)) * 100);
                     comparisonHtml = `<div class="ranking-comparison">🎯 ${Math.min(pct, 100)}% de eficiência (Ótimo: ${benchmark.optimalMoves} mov.)</div>`;
-                } else if (metric === 'deaths') {
-                    comparisonHtml = `<div class="ranking-comparison">${entry.deaths === 0 ? '✅ Perfeito, sem mortes!' : `💀 ${entry.deaths} mortes`}</div>`;
+                } else if (metric === 'blocks') {
+                    comparisonHtml = `<div class="ranking-comparison">🏗️ ${entry.blocks ?? 0} blocos (menor é melhor)</div>`;
                 }
             }
 

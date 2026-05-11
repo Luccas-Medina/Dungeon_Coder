@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="styles/stage.css">
     <link rel="stylesheet" href="styles/animations.css">
     <link rel="stylesheet" href="styles/ui.css">
-    <link rel="icon" type="image/png" href="../assets/favicon.png">
+    <link rel="icon" type="image/png" href="assets/favicon.png">
 </head>
 <body class="font-body-md overflow-x-hidden">
     <!-- View: Menu -->
@@ -27,6 +27,9 @@
                 </div>
                 <h1>Dungeon Coder</h1>
             </div>
+            <button class="btn-theme" id="themeToggleHome" title="Alternar tema claro/escuro">
+                <span class="material-symbols-outlined">light_mode</span>
+            </button>
         </header>
         <main class="grid-pattern" style="background-color:#1e0f24;display:flex;flex:1;align-items:center;justify-content:center;">
             <div class="menu-card">
@@ -37,16 +40,16 @@
                         </svg>
                     </div>
                     <h1 class="menu-title">Dungeon Coder</h1>
-                    <p class="menu-subtitle">Master the maze with code blocks</p>
+                    <p class="menu-subtitle">Domine o labirinto com blocos de código</p>
                 </div>
                 <div class="menu-form">
-                    <label class="menu-label" for="menuPlayerName">PLAYER NAME</label>
-                    <input class="menu-input" id="menuPlayerName" type="text" placeholder="Enter your name..." maxlength="20" autocomplete="off"/>
-                    <div id="menuNameError" class="menu-error">Please enter your name to continue</div>
+                    <label class="menu-label" for="menuPlayerName">NOME DO JOGADOR</label>
+                    <input class="menu-input" id="menuPlayerName" type="text" placeholder="Digite seu nome..." maxlength="20" autocomplete="off"/>
+                    <div id="menuNameError" class="menu-error">Digite seu nome para continuar</div>
                 </div>
                 <button id="menuPlayBtn" disabled class="menu-btn menu-btn-play">
                     <span class="material-symbols-outlined" style="font-variation-settings:'FILL'1">play_arrow</span>
-                    PLAY
+                    JOGAR
                 </button>
                 <button id="menuContinueBtn" class="menu-btn menu-btn-continue" style="display:none;">
                     <span class="material-symbols-outlined" style="font-variation-settings:'FILL'1">replay</span>
@@ -55,6 +58,10 @@
                 <button id="menuRankingsBtn" class="menu-btn menu-btn-rankings">
                     <span class="material-symbols-outlined">leaderboard</span>
                     RANKINGS
+                </button>
+                <button id="menuHelpBtn" class="menu-btn menu-btn-help">
+                    <span class="material-symbols-outlined">help</span>
+                    AJUDA
                 </button>
             </div>
         </main>
@@ -101,11 +108,16 @@
             </div>
             <div class="header-controls lg:flex">
                 <button id="btnPlay" class="btn btn-play" title="Executar Código">▶ Executar</button>
-                <button id="btnPause" class="btn btn-pause" title="Pausar Execução" disabled>⏸ Pausar</button>
                 <button id="btnClear" class="btn btn-clear" title="Limpar Workspace">🗑 Limpar</button>
+                <button id="btnHelp" class="btn btn-help" title="Ajuda">
+                    <span class="material-symbols-outlined">help</span>
+                </button>
+                <button class="btn-theme" id="themeToggleGame" title="Alternar tema claro/escuro">
+                    <span class="material-symbols-outlined">light_mode</span>
+                </button>
                 <button id="btnBackToMenu" class="btn-back" title="Voltar ao Menu">
                     <span class="material-symbols-outlined">arrow_back</span>
-                    <span>Menu</span>
+                    <span>Menu Principal</span>
                 </button>
             </div>
         </header>
@@ -114,40 +126,109 @@
         <main class="app-container">
             <!-- Left Sidebar: Palette (20%) -->
             <aside class="palette" id="palette">
-                <h2 class="palette-title">Block Palette</h2>
+                <h2 class="palette-title">Paleta de Blocos</h2>
 
                 <div class="palette-category" data-category="action">
-                    <h3 class="category-title category-action">Action</h3>
+                    <h3 class="category-title category-action">Ações</h3>
                     <div class="palette-blocks" id="paletteAction">
                         <div class="block block-action" data-type="moveUp" draggable="true" data-label="Mover Para Cima" data-icon="arrow_upward">
                             <span class="material-symbols-outlined block-icon">arrow_upward</span>
-                            <span class="block-label">Move Up</span>
+                            <span class="block-label">Mover Cima</span>
                         </div>
                         <div class="block block-action" data-type="moveDown" draggable="true" data-label="Mover Baixo" data-icon="arrow_downward">
                             <span class="material-symbols-outlined block-icon">arrow_downward</span>
-                            <span class="block-label">Move Down</span>
+                            <span class="block-label">Mover Baixo</span>
                         </div>
                         <div class="block block-action" data-type="moveLeft" draggable="true" data-label="Mover Esquerda" data-icon="arrow_back">
                             <span class="material-symbols-outlined block-icon">arrow_back</span>
-                            <span class="block-label">Move Left</span>
+                            <span class="block-label">Mover Esquerda</span>
                         </div>
                         <div class="block block-action" data-type="moveRight" draggable="true" data-label="Mover Direita" data-icon="arrow_forward">
                             <span class="material-symbols-outlined block-icon">arrow_forward</span>
-                            <span class="block-label">Move Right</span>
+                            <span class="block-label">Mover Direita</span>
                         </div>
                         <div class="block block-action" data-type="attack" draggable="true" data-label="Atacar" data-icon="swords">
                             <span class="material-symbols-outlined block-icon">swords</span>
-                            <span class="block-label">Attack</span>
+                            <span class="block-label">Atacar</span>
+                        </div>
+                        <div class="block block-action" data-type="usar_pocao" draggable="true" data-label="Usar Poção" data-icon="science">
+                            <span class="material-symbols-outlined block-icon">science</span>
+                            <span class="block-label">Usar Poção</span>
+                        </div>
+                        <div class="block block-action" data-type="defender" draggable="true" data-label="Defender" data-icon="shield">
+                            <span class="material-symbols-outlined block-icon">shield</span>
+                            <span class="block-label">Defender</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="palette-category" data-category="control">
-                    <h3 class="category-title category-control">Control</h3>
+                    <h3 class="category-title category-control">Controle</h3>
                     <div class="palette-blocks" id="paletteControl">
-                        <div class="block block-control" data-type="repeat" draggable="true" data-label="Repetir" data-icon="loop">
+                        <div class="block block-control" data-type="repetir" draggable="true" data-label="Repetir" data-icon="loop">
                             <span class="material-symbols-outlined block-icon">loop</span>
                             <span class="block-label">Repetir</span>
+                        </div>
+                        <div class="block block-control" data-type="enquanto" draggable="true" data-label="Enquanto" data-icon="sync_alt">
+                            <span class="material-symbols-outlined block-icon">sync_alt</span>
+                            <span class="block-label">Enquanto</span>
+                        </div>
+                        <div class="block block-control" data-type="se" draggable="true" data-label="Se" data-icon="psychology">
+                            <span class="material-symbols-outlined block-icon">psychology</span>
+                            <span class="block-label">Se</span>
+                        </div>
+                        <div class="block block-control" data-type="entao" draggable="true" data-label="Então" data-icon="arrow_right_alt">
+                            <span class="material-symbols-outlined block-icon">arrow_right_alt</span>
+                            <span class="block-label">Então</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="palette-category" data-category="expression">
+                    <h3 class="category-title category-expression">Expressões</h3>
+                    <div class="palette-blocks" id="paletteExpression">
+                        <div class="block block-expression" data-type="AND" draggable="true" data-label="E" data-icon="">
+                            <span class="block-label">E</span>
+                        </div>
+                        <div class="block block-expression" data-type="OR" draggable="true" data-label="OU" data-icon="">
+                            <span class="block-label">OU</span>
+                        </div>
+                        <div class="block block-expression" data-type="lt" draggable="true" data-label="Menor que" data-icon="">
+                            <span class="block-label">&lt;</span>
+                        </div>
+                        <div class="block block-expression" data-type="gt" draggable="true" data-label="Maior que" data-icon="">
+                            <span class="block-label">&gt;</span>
+                        </div>
+                        <div class="block block-expression" data-type="NOT" draggable="true" data-label="Negar" data-icon="">
+                            <span class="block-label">NEGAR</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="palette-category" data-category="sensor">
+                    <h3 class="category-title category-sensor">Condições</h3>
+                    <div class="palette-blocks" id="paletteSensor">
+                        <div class="block block-sensor" data-type="sensor" data-sensor="sendo_atacado" draggable="true" data-label="Sendo Atacado" data-icon="">
+                            <span class="block-label">Sendo Atacado</span>
+                        </div>
+                        <div class="block block-sensor" data-type="sensor" data-sensor="tem_escudo" draggable="true" data-label="Tem Escudo" data-icon="">
+                            <span class="block-label">Tem Escudo</span>
+                        </div>
+                        <div class="block block-sensor" data-type="sensor" data-sensor="tem_pocao" draggable="true" data-label="Tem Poção" data-icon="">
+                            <span class="block-label">Tem Poção</span>
+                        </div>
+                        <div class="block block-sensor" data-type="sensor" data-sensor="espinhos_em_pe" draggable="true" data-label="Espinhos em Pé" data-icon="">
+                            <span class="block-label">Espinhos em Pé</span>
+                        </div>
+                        <div class="block block-sensor" data-type="sensor" data-sensor="inimigo" draggable="true" data-label="Inimigo" data-icon="">
+                            <span class="block-label">Inimigo</span>
+                        </div>
+                        <div class="block block-sensor" data-type="sensor" data-sensor="vida_cheia" draggable="true" data-label="Vida Cheia" data-icon="">
+                            <span class="block-label">Vida Cheia</span>
+                        </div>
+
+                        <div class="block block-sensor" data-type="sensor" data-sensor="vida_heroi_valor" draggable="true" data-label="Vida Herói" data-icon="">
+                            <span class="block-label">Vida Herói</span>
                         </div>
                     </div>
                 </div>
@@ -162,6 +243,7 @@
                         workspace.script
                     </h2>
                     <div class="workspace-info" id="workspaceInfo">0 blocos</div>
+                    <div class="syntax-error-msg" id="syntaxErrorMsg" style="display:none">⚠ Erro de sintaxe</div>
                     <!-- <button class="text-text-muted hover:text-white flex items-center gap-1 text-xs" id="btnClearWorkspace">
                         <span class="material-symbols-outlined text-sm">delete</span>
                         Clear Workspace
@@ -169,13 +251,13 @@
                 </div>
                 <div class="workspace custom-scrollbar" id="workspace">
                     <div class="workspace-placeholder" id="workspacePlaceholder">
-                        <p>📌 Drag blocks from palette here</p>
-                        <p class="placeholder-sub">Build your command sequence!</p>
+                        <p>📌 Arraste blocos da paleta para aqui</p>
+                        <p class="placeholder-sub">Monte sua sequência de comandos!</p>
                     </div>
                 </div>
                 <div class="trash-zone" id="trashZone">
                     <span class="material-symbols-outlined trash-icon">delete</span>
-                    <span class="trash-label">Drag here to delete</span>
+                    <span class="trash-label">Arraste aqui para deletar</span>
                 </div>
             </section>
 
@@ -213,9 +295,9 @@
                     </div>
                 </div>
                 <div class="stage-controls hidden lg:flex">
-                    <button id="btnPrevLevel" class="btn btn-small" title="Previous Level">⬅️</button>
-                    <button id="btnResetLevel" class="btn btn-small" title="Reset Level">🔄 Reset</button>
-                    <button id="btnNextLevel" class="btn btn-small" title="Next Level">➡️</button>
+                    <button id="btnPrevLevel" class="btn btn-small" title="Fase Anterior">⬅️</button>
+                    <button id="btnResetLevel" class="btn btn-small" title="Reiniciar Fase">🔄 Reset</button>
+                    <button id="btnNextLevel" class="btn btn-small" title="Próxima Fase">➡️</button>
                 </div>
                 <div class="stage-legend hidden lg:flex">
                     <div class="legend-item">🤖 Player</div>
@@ -223,8 +305,12 @@
                     <div class="legend-item">🔑 Key</div>
                     <div class="legend-item">🚪 Door</div>
                     <div class="legend-item">🕳️ Hole</div>
-                    <div class="legend-item">👾 Enemy</div>
+                    <div class="legend-item">🔺 Spike</div>
+                    <div class="legend-item">🦇 Bat</div>
+                    <div class="legend-item">💀 Skeleton</div>
+                    <div class="legend-item">🗿 Troll</div>
                     <div class="legend-item">👹 Boss</div>
+                    <div class="legend-item">🧰 Chest</div>
                 </div>
             </section>
         </main>
@@ -235,7 +321,7 @@
         <div class="run-button-fixed">
             <button class="run-button" id="btnPlayMobile">
                 <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
-                Run Program
+                Executar
             </button>
         </div>
 
@@ -250,21 +336,17 @@
             <div class="flex items-center gap-4">
                 <button class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-lg active:scale-95" id="btnResetDesktop">
                     <span class="material-symbols-outlined">restart_alt</span>
-                    RESET
-                </button>
-                <button class="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-black px-6 py-2.5 rounded-xl font-bold transition-all shadow-lg active:scale-95" id="btnPauseDesktop">
-                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">pause</span>
-                    PAUSE
+                    REINICIAR
                 </button>
                 <button class="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-black px-10 py-3 rounded-xl font-black transition-all shadow-[0_0_15px_rgba(34,197,94,0.4)] active:scale-95" id="btnRunDesktop">
                     <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
-                    RUN CODE
+                    EXECUTAR
                 </button>
             </div>
             <div class="flex items-center gap-4">
                 <div class="text-right">
-                    <p class="text-[10px] text-text-muted font-bold">CURRENT RANK</p>
-                    <p class="text-sm font-bold text-primary" id="currentRank">Master Scripter</p>
+                    <p class="text-[10px] text-text-muted font-bold">RANK ATUAL</p>
+                    <p class="text-sm font-bold text-primary" id="currentRank">Mestre Codificador</p>
                 </div>
                 <div class="w-10 h-10 rounded-lg bg-accent-purple border border-border-purple flex items-center justify-center">
                     <span class="material-symbols-outlined text-primary">military_tech</span>
@@ -305,14 +387,14 @@
             </div>
             <button id="rankingsBackBtn" class="btn-back">
                 <span class="material-symbols-outlined">arrow_back</span>
-                Back
+                Voltar
             </button>
         </header>
         <main class="rankings-view-content" style="background-color:#1e0f24;">
             <div class="rankings-view-card">
                 <h2 class="rankings-view-title">
                     <span class="material-symbols-outlined text-primary" style="color:var(--color-primary);font-size:1.5rem;">leaderboard</span>
-                    Global Rankings
+                    Rankings Globais
                 </h2>
                 <div class="ranking-mode-selector" id="rankingModeSelector">
                     <button id="rankGlobalBtn" class="rank-mode-btn">🌍 Global</button>
@@ -325,23 +407,269 @@
                     </div>
                 </div>
                 <div class="ranking-tabs">
-                    <button class="ranking-tab active" data-tab="score" data-view="score">Score</button>
-                    <button class="ranking-tab" data-tab="deaths" data-view="deaths">Deaths</button>
-                    <button class="ranking-tab" data-tab="movements" data-view="movements">Movements</button>
+                    <button class="ranking-tab active" data-tab="score" data-view="score">Pontuação</button>
+                    <button class="ranking-tab" data-tab="blocks" data-view="blocks">Blocos</button>
+                    <button class="ranking-tab" data-tab="movements" data-view="movements">Movimentos</button>
+                    <button class="ranking-tab" data-tab="players" data-view="players">Jogadores</button>
                 </div>
                 <div class="ranking-content">
                     <div class="ranking-panel active" id="viewRankingScore">
                         <div class="ranking-list" id="viewRankingScoreList"></div>
                     </div>
-                    <div class="ranking-panel" id="viewRankingDeaths">
-                        <div class="ranking-list" id="viewRankingDeathsList"></div>
+                    <div class="ranking-panel" id="viewRankingBlocks">
+                        <div class="ranking-list" id="viewRankingBlocksList"></div>
                     </div>
                     <div class="ranking-panel" id="viewRankingMovements">
                         <div class="ranking-list" id="viewRankingMovementsList"></div>
                     </div>
+                    <div class="ranking-panel" id="viewRankingPlayers">
+                        <div class="ranking-list" id="viewRankingPlayersList"></div>
+                    </div>
                 </div>
             </div>
         </main>
+    </div>
+
+    <!-- Help Accordion Overlay -->
+    <div class="help-overlay" id="helpOverlay" hidden>
+        <div class="help-modal" id="helpModal">
+            <div class="help-header">
+                <h2 class="help-title">
+                    <span class="material-symbols-outlined">help</span>
+                    Como Jogar Dungeon Coder
+                </h2>
+                <button class="btn-back" id="helpCloseBtn">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="help-content custom-scrollbar">
+                <!-- Accordion: Action Blocks -->
+                <div class="accordion-item">
+                    <button class="accordion-header" data-target="helpBlocks">
+                        <span class="accordion-icon material-symbols-outlined">widgets</span>
+                        <span>Blocos de Ação</span>
+                        <span class="accordion-arrow material-symbols-outlined">expand_more</span>
+                    </button>
+                    <div class="accordion-body" id="helpBlocks">
+                        <p>Os blocos azuis <strong>Ações</strong> controlam o que seu robô faz no tabuleiro:</p>
+                        <ul>
+                            <li><span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle">arrow_upward</span> <strong>Mover Cima</strong> — Move o robô uma célula para cima.</li>
+                            <li><span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle">arrow_downward</span> <strong>Mover Baixo</strong> — Move o robô uma célula para baixo.</li>
+                            <li><span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle">arrow_back</span> <strong>Mover Esquerda</strong> — Move o robô uma célula para a esquerda.</li>
+                            <li><span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle">arrow_forward</span> <strong>Mover Direita</strong> — Move o robô uma célula para a direita.</li>
+                            <li><span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle">swords</span> <strong>Atacar</strong> — Ataca inimigos ou chefes em células adjacentes.</li>
+                            <li><span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle">science</span> <strong>Usar Poção</strong> — Consome uma poção para recuperar 1 HP (máx. 5). Pode ser usado mesmo com HP cheio.</li>
+                            <li><span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle">shield</span> <strong>Defender</strong> — Se o herói estiver sendo atacado E tiver um escudo, consome 1 escudo para bloquear o dano. Espinhos e buracos ignoram o escudo.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Accordion: Control Blocks -->
+                <div class="accordion-item">
+                    <button class="accordion-header" data-target="helpControl">
+                        <span class="accordion-icon material-symbols-outlined">call_split</span>
+                        <span>Blocos de Controle</span>
+                        <span class="accordion-arrow material-symbols-outlined">expand_more</span>
+                    </button>
+                    <div class="accordion-body" id="helpControl">
+                        <p>Blocos laranjas que controlam o fluxo de execução:</p>
+                        <ul>
+                            <li><span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle">loop</span> <strong>Repetir</strong> — Executa os blocos internos N vezes. Configure o número no campo de entrada.</li>
+                            <li><span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle">sync_alt</span> <strong>Enquanto</strong> — Executa os blocos internos repetidamente ENQUANTO a condição for verdadeira. Se não houver blocos internos, o herói aguarda parado até a condição se tornar falsa. <strong>Obrigatório</strong>: colocar uma condição no slot.</li>
+                            <li><span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle">psychology</span> <strong>Se</strong> — Executa os blocos internos SE a condição for verdadeira. <strong>Obrigatório</strong>: colocar uma condição no slot.</li>
+                            <li><span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle">arrow_right_alt</span> <strong>Então</strong> — Colocado logo após um bloco <strong>Se</strong>, executa seus blocos internos quando a condição do <strong>Se</strong> for <strong>falsa</strong> (else).</li>
+                        </ul>
+                        <p><em>Dica: arraste blocos para DENTRO dos blocos de controle (Repetir/Enquanto/Se/Então) para aninhá-los.</em></p>
+                    </div>
+                </div>
+
+                <!-- Accordion: Expression Blocks -->
+                <div class="accordion-item">
+                    <button class="accordion-header" data-target="helpExpr">
+                        <span class="accordion-icon material-symbols-outlined">functions</span>
+                        <span>Blocos de Expressão</span>
+                        <span class="accordion-arrow material-symbols-outlined">expand_more</span>
+                    </button>
+                    <div class="accordion-body" id="helpExpr">
+                        <p>Blocos de expressão <strong>só funcionam dentro</strong> do slot de condição de <strong>Se</strong> ou <strong>Enquanto</strong>:</p>
+                        <ul>
+                            <li><strong>E</strong> — Retorna verdadeiro se AMBOS os lados forem verdadeiros. Aceita: qualquer condição (exceto Vida Herói).</li>
+                            <li><strong>OU</strong> — Retorna verdadeiro se PELO MENOS UM lado for verdadeiro. Aceita: qualquer condição (exceto Vida Herói).</li>
+                            <li><strong>NEGAR</strong> — Inverte o resultado da condição (verdadeiro vira falso e vice-versa). Aceita: qualquer condição (exceto Vida Herói). Pode conter <strong>E</strong>, <strong>OU</strong>, <strong>&lt;</strong>, <strong>&gt;</strong> e outro <strong>NEGAR</strong> dentro dele.</li>
+                            <li><strong>&lt;</strong> (Menor que) — Compara <strong>Vida Herói</strong>, <strong>Tem Escudo</strong> ou <strong>Tem Poção</strong> com um número. <strong>Não aceita E, OU ou NEGAR</strong> no slot esquerdo. Ex: <code>Vida Herói &lt; 3</code></li>
+                            <li><strong>&gt;</strong> (Maior que) — Compara <strong>Vida Herói</strong>, <strong>Tem Escudo</strong> ou <strong>Tem Poção</strong> com um número. <strong>Não aceita E, OU ou NEGAR</strong> no slot esquerdo. Ex: <code>Tem Escudo &gt; 0</code></li>
+                            <li><strong>Limite de aninhamento:</strong> Expressões podem ter no máximo <strong>4 níveis</strong> de profundidade (ex: <code>NEGAR(E(NEGAR(&lt;(Vida Herói, 3)))))</code> é ok, 5 níveis é erro).</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Accordion: Conditions -->
+                <div class="accordion-item">
+                    <button class="accordion-header" data-target="helpSensors">
+                        <span class="accordion-icon material-symbols-outlined">sensors</span>
+                        <span>Blocos de Condição</span>
+                        <span class="accordion-arrow material-symbols-outlined">expand_more</span>
+                    </button>
+                    <div class="accordion-body" id="helpSensors">
+                        <p>Blocos verdes que <strong>só funcionam</strong> dentro do slot de condição de <strong>Se</strong> ou <strong>Enquanto</strong>:</p>
+                        <ul>
+                            <li><strong>Sendo Atacado</strong> — Verdadeiro se o herói está sendo atacado (morcego adjacente, flecha/fogo a caminho, ataque do troll ou boss).</li>
+                            <li><strong>Tem Escudo</strong> — Retorna a quantidade de escudos (0 = falso, &gt;0 = verdadeiro).</li>
+                            <li><strong>Tem Poção</strong> — Retorna a quantidade de poções (0 = falso, &gt;0 = verdadeiro).</li>
+                            <li><strong>Espinhos em Pé</strong> — Verdadeiro se há espinhos ATIVOS adjacentes ao herói.</li>
+                            <li><strong>Inimigo</strong> — Verdadeiro se há um inimigo adjacente ao herói.</li>
+                            <li><strong>Vida Cheia</strong> — Verdadeiro se o HP do herói está no máximo (5/5).</li>
+                            <li><strong>Vida Herói</strong> — Retorna o HP atual do herói (número). Usado com <strong>&lt;</strong> ou <strong>&gt;</strong> para comparações.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Accordion: Enemies -->
+                <div class="accordion-item">
+                    <button class="accordion-header" data-target="helpEnemies">
+                        <span class="accordion-icon material-symbols-outlined">dangerous</span>
+                        <span>Inimigos</span>
+                        <span class="accordion-arrow material-symbols-outlined">expand_more</span>
+                    </button>
+                    <div class="accordion-body" id="helpEnemies">
+                        <p>Inimigos aparecem a partir da Fase 2 e atacam automaticamente a cada 1.5s:</p>
+                        <ul>
+                            <li>🦇 <strong>Morcego</strong> — Move-se em linha reta (vai e volta). Causa 1 de dano ao colidir. Imune a espinhos. Morre com ataque, flechas e explosões.</li>
+                            <li>💀 <strong>Esqueleto</strong> — Parado, atira flechas na direção que está virado. Imune a flechas e fogo. Morre com ataque e explosões.</li>
+                            <li>🗿 <strong>Troll de Pedra</strong> — Parado perto da chave. Arremessa uma pedra com 1s de aviso (célula vermelha). Imune a flechas. Só morre com ataque do herói.</li>
+                            <li>👹 <strong>Boss</strong> — Ocupa 2×2 células. Aparece a cada 5 fases. Polvo ataca com aviso de 1s. Diabo atira chamas. Só morre com ataques do herói. Vale +1000 pts.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Accordion: Grid Elements -->
+                <div class="accordion-item">
+                    <button class="accordion-header" data-target="helpGrid">
+                        <span class="accordion-icon material-symbols-outlined">grid_on</span>
+                        <span>Elementos do Grid</span>
+                        <span class="accordion-arrow material-symbols-outlined">expand_more</span>
+                    </button>
+                    <div class="accordion-body" id="helpGrid">
+                        <p>O grid 10×10 tem vários tipos de célula:</p>
+                        <ul>
+                            <li>🧱 <strong>Parede</strong> — Bloqueia passagem. Contorne-as.</li>
+                            <li>🟩 <strong>Caminho</strong> — Célula segura para andar.</li>
+                            <li>🏁 <strong>Início</strong> — Onde o robô aparece.</li>
+                            <li>🪙 <strong>Moeda</strong> — +100 pontos ao coletar.</li>
+                            <li>🔑 <strong>Chave</strong> — +200 pontos. Necessária para destrancar a porta.</li>
+                            <li>🚪 <strong>Porta</strong> — Saída da fase. Só abre com a chave.</li>
+                            <li>🕳️ <strong>Buraco</strong> — Morte instantânea ao cair.</li>
+                            <li>🔺 <strong>Espinho</strong> — Ciclo de 3s ativo / 3s inativo. Causa 1 de dano quando ativo.</li>
+                            <li>🧰 <strong>Baú</strong> — Aparece a cada 3 fases. Contém: Espada (+1 ATK), Escudo (+1 Shield) ou Poção (+1 inventário).</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Accordion: Items & Shield -->
+                <div class="accordion-item">
+                    <button class="accordion-header" data-target="helpItems">
+                        <span class="accordion-icon material-symbols-outlined">inventory_2</span>
+                        <span>Itens e Escudo</span>
+                        <span class="accordion-arrow material-symbols-outlined">expand_more</span>
+                    </button>
+                    <div class="accordion-body" id="helpItems">
+                        <p>Itens que ajudam na jornada:</p>
+                        <ul>
+                            <li>🪙 <strong>Moedas</strong> — +100 pts cada.</li>
+                            <li>🔑 <strong>Chave</strong> — +200 pts, destranca a porta.</li>
+                            <li>🧪 <strong>Poção</strong> — Usada com o bloco <span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle">science</span> <strong>Usar Poção</strong>. Recupera 1 HP.</li>
+                            <li>🛡️ <strong>Escudo</strong> — Você começa com 1 escudo. Use o bloco <span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle">shield</span> <strong>Defender</strong> para consumir 1 escudo e bloquear o PRÓXIMO ataque recebido. Escudos acumulam (baús dão +1).</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Accordion: Syntax Errors -->
+                <div class="accordion-item">
+                    <button class="accordion-header" data-target="helpErrors">
+                        <span class="accordion-icon material-symbols-outlined">error</span>
+                        <span>Erros de Sintaxe</span>
+                        <span class="accordion-arrow material-symbols-outlined">expand_more</span>
+                    </button>
+                    <div class="accordion-body" id="helpErrors">
+                        <p>O validador impede execução com blocos mal posicionados. Passe o mouse sobre <strong>⚠ Erro de sintaxe</strong> para ver o detalhe:</p>
+                        <ul>
+                            <li><strong>"Então" deve vir logo após "Se"</strong> — O bloco <strong>Então</strong> precisa estar imediatamente depois de um bloco <strong>Se</strong>.</li>
+                            <li><strong>Expressões/Condições só podem dentro de "Se" ou "Enquanto"</strong> — Blocos de condição soltos no workspace não são válidos.</li>
+                            <li><strong>"Se"/"Enquanto" precisa de uma condição</strong> — <strong>Se</strong> ou <strong>Enquanto</strong> sem nenhum bloco no slot de condição.</li>
+                            <li><strong>Comparação (&lt; &gt;) só aceita: Vida Herói, Tem Escudo ou Tem Poção</strong> — O lado esquerdo de &lt; ou &gt; só aceita sensores numéricos.</li>
+                            <li><strong>Comparação (&lt; &gt;) não aceita E/OU/NEGAR</strong> — Blocos <strong>E</strong>, <strong>OU</strong> e <strong>NEGAR</strong> não podem ser usados dentro de &lt; ou &gt;.</li>
+                            <li><strong>Expressão lógica (E/OU/NEGAR) não aceita "Vida Herói"</strong> — <strong>Vida Herói</strong> é numérico e só funciona com &lt; ou &gt;.</li>
+                            <li><strong>Máximo de 4 níveis de aninhamento para expressões</strong> — Expressões aninhadas (ex: <code>NEGAR(E(...))</code>) podem ter no máximo 4 níveis de profundidade.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Accordion: Execution Rules -->
+                <div class="accordion-item">
+                    <button class="accordion-header" data-target="helpExecution">
+                        <span class="accordion-icon material-symbols-outlined">play_arrow</span>
+                        <span>Regras de Execução</span>
+                        <span class="accordion-arrow material-symbols-outlined">expand_more</span>
+                    </button>
+                    <div class="accordion-body" id="helpExecution">
+                        <p><strong>Cada fase deve ser concluída em uma única execução!</strong></p>
+                        <ul>
+                            <li>▶️ Monte seus blocos e clique em <strong>Executar</strong> — todos os blocos rodam em sequência.</li>
+                            <li>❌ Se os blocos terminarem e o herói <strong>não estiver na porta</strong>: o herói sofre <strong>1 de dano</strong> (como se fosse atingido por um inimigo) e a fase é reiniciada (moedas, chaves e inimigos voltam ao normal). Reorganize os blocos e tente novamente!</li>
+                            <li>✅ Se o herói <strong>alcançar a porta</strong> durante a execução, a fase é concluída. Blocos que ainda faltavam executar custam <strong>-10 pts cada</strong> (mínimo 0 pts).</li>
+                            <li>💀 Se o herói <strong>morrer</strong> durante a execução (buraco, inimigo, boss), a execução para e você perde a fase.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Accordion: Special Rules -->
+                <div class="accordion-item">
+                    <button class="accordion-header" data-target="helpRules">
+                        <span class="accordion-icon material-symbols-outlined">auto_awesome</span>
+                        <span>Regras Especiais</span>
+                        <span class="accordion-arrow material-symbols-outlined">expand_more</span>
+                    </button>
+                    <div class="accordion-body" id="helpRules">
+                        <p>A partir da Fase 3, cada fase pode ter uma <strong>Regra Especial aleatória</strong> (ou nenhuma). A regra atual é exibida no topo da tela do jogo.</p>
+                        <ul>
+                            <li>📋 <strong>Programação Econômica</strong> — Limite máximo de <strong>10 blocos</strong> no workspace. Use repetições e condições em vez de blocos individuais.</li>
+                            <li>🔄 <strong>Mundo Invertido</strong> — <strong>Cima vira Baixo</strong>, <strong>Esquerda vira Direita</strong>. Condições booleanas (Inimigo, Sendo Atacado, etc.) retornam o <strong>oposto</strong>. O grid fica visualmente invertido.</li>
+                            <li>🐉 <strong>Vidro de Dragão</strong> — Ataque <strong>dobrado</strong>, mas <strong>HP máximo = 1</strong>. Use Defender e sensores de inimigo para sobreviver.</li>
+                            <li>🧛 <strong>Maldição do Vampiro</strong> — Perde <strong>1 HP a cada 8 movimentos</strong>. Derrotar inimigos recupera <strong>todo o HP</strong>. Poções também curam.</li>
+                            <li>👑 <strong>Ganância do Rei</strong> — A porta <strong>só destranca</strong> se <strong>todas as moedas</strong> da fase forem coletadas.</li>
+                            <li>🕊️ <strong>Pacifista de Ferro</strong> — A fase <strong>falha</strong> se usar o bloco <strong>Atacar</strong> ou se qualquer <strong>inimigo morrer</strong>. Use Defender para passar.</li>
+                            <li>🧊 <strong>Piso de Gelo</strong> — Cada comando <strong>Mover</strong> desliza o herói <strong>2 casas</strong> em vez de 1. Se bater numa parede, para na célula anterior.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Accordion: Stars & Scoring -->
+                <div class="accordion-item">
+                    <button class="accordion-header" data-target="helpStars">
+                        <span class="accordion-icon material-symbols-outlined">star</span>
+                        <span>Estrelas e Pontuação</span>
+                        <span class="accordion-arrow material-symbols-outlined">expand_more</span>
+                    </button>
+                    <div class="accordion-body" id="helpStars">
+                        <p>Cada fase pode ganhar até 3 estrelas:</p>
+                        <ul>
+                            <li>⭐ Completar a fase (sempre)</li>
+                            <li>⭐ Completar com 0 mortes</li>
+                            <li>⭐ Completar com no máximo 20 movimentos</li>
+                        </ul>
+                        <p>Pontuação:</p>
+                        <ul>
+                            <li>Moeda: +100 pts | Chave: +200 pts | Fase completa: +500 pts</li>
+                            <li>Boss derrotado: +1000 pts | Morte: -50 pts | Bloco extra: -10 pts</li>
+                        </ul>
+                        <p>Ranking global e por fase disponível no menu <strong>RANKINGS</strong>.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="help-footer">
+                <button class="btn btn-play" id="helpGotItBtn">Entendi!</button>
+            </div>
+        </div>
     </div>
 
     <script src="js/app.js" type="module"></script>

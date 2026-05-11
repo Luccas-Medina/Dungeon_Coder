@@ -23,15 +23,20 @@ block-engine-mvp/
 │   └── animations.css      # CSS animations
 └── js/
     ├── app.js              # Main orchestrator, initializes all modules
+    ├── actors/
+    │   └── player.js       # RPG attributes (HP, ATK, DEF, potions)
+    ├── ui/
+    │   ├── modals.js        # Promise-based async modal manager
+    │   └── dashboard.js     # HUD with HP bar, stats, potion button
     ├── engine/
     │   ├── parser.js       # Converts DOM tree → command array
     │   ├── runner.js       # Async command executor (async/await)
-    │   ├── storage.js      # localStorage wrapper (progress, workspace, rankings, stars)
+    │   ├── storage.js      # localStorage wrapper (progress, workspace, rankings, stars, attributes)
     │   └── levelGenerator.js # Procedural level generation (50 levels)
     └── components/
         ├── dragDrop.js     # HTML5 Drag & Drop manager
         ├── workspace.js    # Workspace block stack manager
-        ├── Stage.js        # Grid, actor, collisions, game mechanics
+        ├── Stage.js        # Grid, actor, collisions, chests, game mechanics
         └── palette.js      # Block palette manager
 ```
 
@@ -66,11 +71,20 @@ async executeCommand(command) {
 All persistence goes through `Storage` module in `js/engine/storage.js`:
 - `saveProgress()` / `loadProgress()` - level, stats, player name
 - `saveWorkspace()` / `loadWorkspace()` - block stack
-- `addRankingEntry()` / `getRankingsByScore/Deaths/Movements()` - rankings
-- `getRankingsByScoreForLevel(level)` - per-level ranking filtering
-- `getAggregatedRankingsByScore/Deaths/Movements()` - global aggregated rankings (summed per player)
+- `addRankingEntry()` / `getRankingsByScore/Blocks/Movements()` - rankings (Deaths replaced by Blocks)
+- `getRankingsByScoreForLevel(level)` / `getRankingsByBlocksForLevel(level)` - per-level ranking filtering
+- `getAggregatedRankingsByScore/Blocks/Movements()` - global aggregated rankings (summed per player)
 - `saveStars(level, data)` / `loadStars()` / `getLevelStars(level)` - star progression
 - `calculateLevelBenchmark(levelData)` - BFS-based optimal moves and max score for comparison
+- `playerStats` in `saveProgress()`/`loadProgress()` - RPG attributes persistence
+- `agentica_chest_tip_shown` - flag for one-time chest tooltip
+- `validateStarEntry(value)` - validates star data structure (earned 1-3, deaths 0-9999, movements 0-9999)
+- `savePlayerStarRecord(name, level, data)` - per-user star ranking (only if earned > previous record)
+- `loadPlayerStarRecord(name, level)` - per-user star record lookup
+- `loadStarRankingTable()` - full star ranking table with validation
+- `getStarRankingForLevel(level)` - all players sorted by stars for a level
+- `secureSave()` / `secureLoad()` - signed blobs with in-memory mirror anti-tampering
+- `startIntegrityCheck()` - periodic 1.5s interval verifying localStorage integrity vs mirror
 
 ## Coding Standards
 
@@ -94,6 +108,7 @@ All persistence goes through `Storage` module in `js/engine/storage.js`:
 | moveRight | Mover Para Direita | action | blue |
 | attack | Atacar | action | blue |
 | repeat | Repetir | control | orange |
+| wait | Esperar | control | orange |
 
 ## Game Mechanics
 
@@ -119,6 +134,7 @@ Levels defined in `app.js` as array of objects:
 - `door` - Level exit (requires key)
 - `enemy` - Defeatable with attack block
 - `boss` - Multi-cell, requires multiple hits
+- `chest` - Random loot (sword/armor/potion)
 
 ### Scoring System
 - Coin: +100 points
@@ -275,7 +291,230 @@ Levels are procedurally generated with **per-session seeded RNG** (seed = levelN
 - `.level-selector.disabled` state when Global mode is active
 - `.ranking-comparison` text for per-level benchmark display
 
+### Features Implemented (Session 09/05/2026)
+
+#### 1. RPG Stats System
+- **File**: `js/actors/player.js`
+- `PlayerStats` class: `hp`, `maxHp`, `attack`, `defense`, `potions` properties
+- `takeDamage(amount)`: Defense absorbs first, excess reduces HP
+- `usePotion()`: Consumes 1 potion, heals 1 HP (capped at maxHp)
+- `reset()`: Restores default values (HP=5, ATK=1, DEF=1, potions=0)
+- Serialized via `toJSON()`, persisted in localStorage
+
+#### 2. Chest System
+- **Files**: `js/components/Stage.js`, `styles/stage.css`
+- Chest spawns every 3 levels (excluding boss levels), placed on random `path` cell
+- 3 items with 33% chance each: sword (+1 ATK), armor (+1 DEF), potion (+1 inventory)
+- Collection triggers modal via Promise that pauses runner execution
+- Visual: gold pulsating icon (`inventory_2` Material Symbol) with `chestFloat` animation
+
+#### 3. Damage Mechanics
+- Enemy collision: 1 raw damage → defense absorbs, excess to HP
+- Boss collision: 3 raw damage → defense absorbs, excess to HP
+- Hole: Instant death (unchanged)
+- HP persists between levels, all stats reset on death/new game
+
+#### 4. UI Components
+- **Dashboard** (`js/ui/dashboard.js`): HUD with color-coded HP bar, ATK/DEF display, potion button, `damageFlash()` animation
+- **ModalManager** (`js/ui/modals.js`): Promise-based modal system that pauses/resumes runner via `await`
+- Potion button disabled while runner is executing
+
+#### 5. Visual Feedback
+- `healGlow` animation on actor when potion is used
+- `damageFlash` red flash on HUD when damaged
+- `chestFloat` pulsating animation on chest cells
+- One-time chest tooltip toast (`agentica_chest_tip_shown` flag)
+- Stage legend updated with 🧰 Chest icon
+
+#### 6. Blocks Ranking Category (replaces Deaths)
+- **Files**: `js/app.js`, `js/engine/storage.js`, `index.html`
+- Deaths tab removed from rankings UI; replaced by "Blocos" (block count in workspace at victory)
+- Lower block count = better rank, incentivizing efficient block-based solutions
+- `getRankingsByBlocks()` — global sort ascending by `blocks`
+- `getRankingsByBlocksForLevel(level)` — per-level filter + sort
+- `getAggregatedRankingsByBlocks()` — grouped by player, summed blocks
+- Block count captured via `workspaceManager.getBlockCount()` at top of `handleVictory()` (before `workspaceManager.clear()`)
+- Mock data updated: Kenji 3-6 blocks, Mori 6-10 blocks
+- Backward compatibility: `?? 999` fallback for old entries without blocks field
+#### 1. Persistência automática e auto-restore
+- **`autoRestoreIfNeeded()`** (`app.js`): Chamada no `init()`. Ao carregar a página, se existir progresso salvo no localStorage, navega automaticamente para a tela de jogo, restaura a fase correta, o workspace, música e UI. Não exibe o menu se o jogador já tinha uma sessão ativa.
+- **`beforeunload`** (`app.js`): Novo handler que salva `saveProgress()` + `workspaceManager.saveToStorage()` ao fechar/atualizar a página, garantindo que nenhum dado seja perdido.
+
+#### 2. Validação completa do sistema de estrelas (`agentica_stars`)
+- **`validateStarEntry()`** (`storage.js`): Helper que valida `earned` (1-3), `deaths` (0-9999) e `movements` (0-9999). Retorna `null` se inválido.
+- **`loadStars()` reescrito**: Valida cada entrada individualmente por nível, descarta níveis fora de 1-50, rejeita arrays e objetos malformados. Envolvido em try/catch.
+- **`saveStars()` reescrito**: Valida entrada completa antes de salvar. `isRecord` só é `true` se `earned > prev.earned`. Try/catch geral com fallback seguro.
+- **`getLevelStars()`**: Usa `validateStarEntry()` — retorna `null` sempre que o dado estiver ausente ou corrompido, sem quebrar a UI.
+
+#### 3. Nova tabela de ranking de estrelas por usuário (`agentica_star_ranking`)
+- **Estrutura**: `{ "PlayerName": { "1": { earned, deaths, movements, score }, ... } }` em `storage.js`
+- **`savePlayerStarRecord(name, level, data)`**: Só persiste se `earned > recorde anterior` do mesmo jogador na mesma fase. Valida nome (fallback `'Jogador Anônimo'`), nível (1-50), estrelas (1-3).
+- **`loadPlayerStarRecord(name, level)`**: Consulta segura com validação de cada campo.
+- **`loadStarRankingTable()`**: Recupera e valida a tabela completa. Ignora jogadores ou níveis com estrutura inválida.
+- **`getStarRankingForLevel(level)`**: Retorna todos os jogadores ordenados por estrelas (desc) e movimentos (asc).
+- **Integração**: `handleVictory()` em `app.js` chama `Storage.savePlayerStarRecord()` após o `saveStars` existente.
+
+#### 4. Nome padrão 'Jogador Anônimo'
+- **`app.js loadProgress()`**: Fallback para `'Jogador Anônimo'` se o nome salvo estiver vazio ou for `null`. O menu pré-preenche com esse nome automaticamente.
+
+#### 5. Anti-tampering do localStorage
+- **`_saveMirror`** (`storage.js`): Espelho em memória (`Map`) do último blob válido salvo para cada chave `agentica_*`.
+- **`secureSave()`**: Armazena o blob no localStorage e no mirror.
+- **`secureLoad()` reescrita**: Em cada leitura verifica integridade — se a chave foi deletada ou corrompida (assinatura inválida, JSON inválido, versão errada), restaura do mirror e loga `console.error`.
+- **`startIntegrityCheck()`**: `setInterval` a cada 1.5s varre todas as chaves do mirror e compara com o localStorage. Qualquer diferença é revertida automaticamente.
+- **`clearContinueState()` e `clearAll()`**: Sincronizados com o mirror — limpam o espelho ao remover chaves intencionalmente.
+- **Mensagem no console**: `[Block Engine] ⛔ Modificação manual detectada no localStorage! A chave "X" foi alterada indevidamente...`
+
+#### 6. Try/catch em toda E/S do localStorage
+- `secureSave()`, `clearContinueState()`, `clearAll()` — todas as operações de `setItem`, `removeItem`, `JSON.stringify`, `btoa` são protegidas com try/catch silencioso, sem travar a aplicação.
+
+### Features Implemented (Session 10/05/2026)
+
+#### 1. Estrelas por jogador (per-player star display)
+- **`updateStarsUI()`** (`app.js`): Agora usa `Storage.loadPlayerStarRecord(this.playerName, level)` em vez de `Storage.getLevelStars()` (global). Cada jogador vê apenas SUAS estrelas.
+- **`updateStarTooltip()`** (`app.js`): Mesma mudança — tooltip de estrelas por jogador.
+- **`autoRestoreIfNeeded()`** (`app.js`): Popula `#playerName.value` com o nome salvo para que as estrelas carreguem corretamente no auto-restore.
+- **`resumeFromContinue()`** (`app.js`): Lê nome do input do menu (`#menuPlayerName`) e define `#playerName.value` corretamente.
+
+#### 2. Stats por nível no ranking (per-level ranking stats)
+- **`_levelStartStats`** (`app.js`): Novo campo no constructor que captura um snapshot dos stats cumulativos (`score`, `deaths`, `movements`) no início de cada fase via `loadLevel()`.
+- **`handleVictory()`** (`app.js`): Ranking entries agora usam delta por nível (`this.stats - _levelStartStats`) em vez de stats cumulativos. Isso permite que `validateRankingEntry()` aceite entradas de todas as fases (antes rejeitava após a fase 1 por comparar score cumulativo contra benchmark de fase única).
+- **Estrelas**: Cálculo de estrelas (`levelDeaths`, `levelMovements`) também usa stats por nível, não cumulativos.
+
+#### 3. Backup criptografado para todas as chaves do localStorage
+- **`b64Encode()` / `b64Decode()`** (`storage.js`): Usam `TextEncoder`/`TextDecoder` para codificação base64 segura para UTF-8 (substitui `btoa`/`atob` que falham em caracteres não-Latin1).
+- **`backupSave(key, data)`** (`storage.js`): Salva blob assinado em `key + '_backup'` via `secureSave` — **nunca** JSON puro.
+- **`backupLoad(key)`** (`storage.js`): Parseia manualmente o blob assinado (`b64Decode` → `JSON.parse` → extrai `inner.d`), **sem** usar `secureLoad`, evitando verificações de versão/assinatura que poderiam rejeitar backups válidos. Inclui fallback para JSON puro legado (`_backup_plain`).
+- **`backupDelete(key)`** (`storage.js`): Remove `_backup` e `_backup_plain` (legado) do localStorage e mirror.
+
+Todas as 6 chaves `agentica_*` têm backup criptografado:
+
+| Chave principal | backupSave em | load* com fallback backupLoad |
+|---|---|---|
+| `agentica_progress` | `saveProgress()` | `loadProgress()` |
+| `agentica_workspace` | `saveWorkspace()` | `loadWorkspace()` |
+| `agentica_ranking` | `saveRanking()` / `addRankingEntry()` | `loadRanking()` / `addRankingEntry()` |
+| `agentica_stars` | `saveStars()` | `loadStars()` |
+| `agentica_continue` | `saveContinueState()` | `loadContinueState()` |
+| `agentica_star_ranking` | `savePlayerStarRecord()` | `loadStarRankingTable()` |
+
+- **`clearContinueState()`** e **`clearAll()`**: Chamam `backupDelete()` para cada chave.
+
+## Storage Security Architecture
+
+### Blob Format (signed + encoded)
+Every `agentica_*` key stores data in a structured blob:
+
+```
+base64({ s: "<signature>", p: "<payload>" })
+```
+
+Where:
+- `payload` = `JSON.stringify({ v: <version>, d: <data> })`
+- `signature` = `hash(salt + payload)` — simple hash-based integrity check (not cryptographic)
+- `version` = schema version for forward compatibility (currently 1)
+- `data` = the actual application data
+
+### Functions
+
+#### Secure Layer (`secureSave` / `secureLoad` / `saveEncrypted` / `loadEncrypted`)
+- `secureSave(key, data)`: Encodes → signs → base64 → writes to `localStorage` + in-memory `_saveMirror`
+- `secureLoad(key)`: Reads blob → decodes → verifies signature → checks version → returns `data`
+  - If signature/version mismatch AND mirror exists → restores from mirror, logs tamper warning
+  - If signature/version mismatch AND no mirror → returns `null` (does NOT delete data)
+  - Mirror is empty after page refresh (in-memory only)
+- `Storage.saveEncrypted(key, data)`: Public wrapper for `secureSave` — use from `app.js` for any key that is NOT one of the 6 managed keys (e.g. `agentica_theme`, `agentica_chest_tip_shown`)
+- `Storage.loadEncrypted(key)`: Public wrapper for `secureLoad`
+
+#### Backup Layer (`backupSave` / `backupLoad`)
+- `backupSave(key, data)`: Calls `secureSave(key + '_backup', data)` — identical signed blob format
+- `backupLoad(key)`: Manual parsing bypassing `secureLoad` entirely:
+  1. Tries `key + '_backup'` (signed blob) — decodes `b64Decode` → `JSON.parse` → extracts `inner.d`
+  2. Falls back to `key + '_backup_plain'` (legacy plain JSON, deprecated — only exists from earlier versions) — removes the plain key after migration
+  3. On success, calls `secureSave(key, restoredData)` + `secureSave(key + '_backup', restoredData)` to restore both main and backup keys
+- `backupDelete(key)`: Removes `key + '_backup'` and `key + '_backup_plain'` from localStorage + mirror
+
+#### Integrity Monitor (`startIntegrityCheck`)
+- Periodic check (every 1.5s) comparing `_saveMirror` vs `localStorage`
+- **Currently disabled** (returns immediately) — was causing false positives when backup restoration modified keys between ticks
+
+#### One-Time Migration (`migrateLegacyPlainBackups`)
+- Runs at module load (`storage.js` line 206-224)
+- Scans `localStorage` for any keys ending with `_backup_plain`
+- Re-saves each as a signed blob via `secureSave(baseKey + '_backup', parsed)`, then removes the plain key
+- Ensures no legacy unencrypted data survives page refresh
+
+### Recovery Flow
+When any `load*` function is called (e.g., `loadProgress`, `loadStars`, `loadWorkspace`):
+
+```
+loadX() → secureLoad(key) → null (no data or mirror after refresh)
+       → backupLoad(key)
+         → 1. Try signed blob (key + '_backup')  ← manual parse, no version/sig check
+         → 2. Fallback: plain JSON (key + '_backup_plain')  ← legacy
+       → If success: secureSave restores main key + backup key
+       → Return data
+```
+
+This ensures data survives manual deletion of main keys in DevTools.
+
+### Key Characteristics
+- **No plain JSON is written** — `backupSave` only creates signed blobs
+- **Plain JSON on page load is migrated** — `migrateLegacyPlainBackups()` re-saves any leftover `_backup_plain` keys as signed blobs, then deletes them
+- **Plain JSON reading kept for backward compat** — old `_backup_plain` keys found mid-session are recovered and re-saved as signed blobs
+- **No false tamper warnings** — `secureLoad` returns `null` (instead of calling `restoreFromMirror`) when mirror is empty after refresh
+- **All E/S wrapped in try/catch** — no operation throws, even if localStorage is full, corrupted, or unavailable
+- **Backup keys are NOT in-memory mirrored** — only restored when a `load*` function is called
+
 ## Known Limitations
+
+### RPG System
+- PlayerStats only encodes base attributes (no equipment slots yet)
+- Chest items are purely additive (no diminishing returns on attack/defense)
+- No visual indicator on the grid of which item was inside a chest (only modal text)
+- Attack attribute is cosmetic for now (not used in damage calculation — enemy collision always deals 1 damage)
+- Potion count is capped only by inventory (no maximum carry limit enforced besides what's collected)
+
+## Anti-Cheat Architecture
+
+### Module-Level Closures (Primary Defense)
+Sensitive session state is stored in **module-level variables** defined *outside* the `App` class (`app.js` lines 119-125):
+```javascript
+let _victoryToken = null;
+let _commandHash = null;
+let _statsSnapshot = null;
+```
+Since these are in **module scope** (not `this.*` properties), they are **inaccessible from the browser console** — `app._victoryToken` returns `undefined`.
+
+### Three-Layer Verification (handleVictory)
+
+| Layer | What it blocks | Mechanism |
+|-------|---------------|-----------|
+| **Victory Token** | `app.handleVictory()` called from console | Random token set in `runCode()`, checked and consumed in `handleVictory()`. Token includes `level` to prevent cross-level exploits |
+| **Command Hash** | Modifying workspace blocks during execution | `_simpleHash(JSON.stringify(commands))` captured at parse time in `runCode()`, re-computed and compared in `handleVictory()`. Any DOM block change causes mismatch |
+| **Stats Snapshot** | Inflating score/deaths before/during run | Stats `{score, deaths, movements}` copied at `runCode()` start. `handleVictory()` verifies deltas: deaths/movements can't decrease, score can't exceed level's theoretical max (coins×100 + keys×200 + boss×1000 + completion×500 + enemies×150 + 200 buffer) |
+
+### Single-Use Token
+- After `handleVictory()` passes all checks, all three variables are set to `null`
+- Calling `handleVictory()` twice → token missing → blocked
+- Token cleared in: `handleDefeat()`, `handleLevelFailed()`, `loadLevel()`, `btnClear`, and at the start of every `runCode()` call
+
+### Attempted Console Exploits — Blocked
+
+| Console command | Why it fails |
+|----------------|-------------|
+| `app.handleVictory()` | `_victoryToken` is `null` → `_rejectCheat()` → 🚫 |
+| `app.stats.score = 999999` then play | `_statsSnapshot` at `runCode()` captures inflated value → `handleVictory()` computes `earnedDuringRun.score` > `maxLegitScore` → 🚫 |
+| `app.playerStats.hp = 999` then play | Not directly checked by victory (HP is not part of ranking/stars), but `handleDefeat()` resets all stats anyway |
+| `Storage.saveStars(...)` | Uses `secureSave` with SHA-256 signature. Stars are cosmetic only |
+| `Storage.addRankingEntry(...)` | Uses `validateRankingEntry()` which rejects entries exceeding BFS benchmark `maxScore + 200` |
+| Clear workspace, call `handleVictory()` | `_commandHash` mismatch (no blocks found) vs stored hash → 🚫 |
+| Inject block DOM from console | DOM injection triggers `dragDrop.js` events, doesn't change `_commandHash` set by `runCode()` |
+
+### Secondary Defenses (localStorage)
+- `secureSave` signs every blob with SHA-256 signature — manual DevTools edits are detected and data is treated as missing (not loaded)
+- `validateRankingEntry` checks per-level score against BFS benchmark (`maxScore + 200` buffer) — even with correct token, an impossible score entry is rejected
+- All `Storage.*` reads use `try/catch` — no missing/corrupted key crashes the game
 
 ## Command Reference
 When working with this project:

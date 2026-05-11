@@ -6,6 +6,7 @@
     flex-direction: column;
     border: 1px solid var(--color-border-purple);
     overflow-y: auto;
+    overflow-x: hidden;
     max-width: 100%;
 }
 
@@ -25,6 +26,10 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
 }
 
 .stage-level {
@@ -66,7 +71,7 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: var(--stage-bg, url('/Dungeon_Coder/images/background.jpg')) center / cover no-repeat;
+    background: var(--stage-bg, url('/teste-block-engine-mvp/images/background.jpg')) center / cover no-repeat;
     opacity: 0.25;
     z-index: 0;
     pointer-events: none;
@@ -75,8 +80,9 @@
 
 /* Grid pattern overlay */
 .grid-pattern {
-    background-image: radial-gradient(circle, var(--color-accent-purple) 1px, transparent 1px);
+    background-image: radial-gradient(circle, var(--color-accent-purple) 1.5px, transparent 1.5px);
     background-size: 30px 30px;
+    opacity: 0.6;
 }
 
 .stage {
@@ -98,8 +104,6 @@
     grid-template-rows: repeat(var(--grid-size), var(--cell-size));
     position: relative;
     z-index: 1;
-    max-width: 100%;
-    overflow: hidden;
 }
 
 .cell {
@@ -112,7 +116,7 @@
     font-size: 1.25rem;
     position: relative;
     transition: background var(--transition-fast), transform var(--transition-fast);
-    border: 0.5px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .cell.path {
@@ -175,11 +179,109 @@
     animation: keyGlow 2s ease-in-out infinite;
 }
 
-.cell.enemy .material-symbols-outlined {
-    color: #EF4444;
-    font-size: 1.5rem;
+.enemy-icon {
+    font-size: 1.3rem;
     filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.4));
     animation: enemyPulse 1.5s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.enemy-icon-bat {
+    color: #8B5CF6;
+    filter: drop-shadow(0 0 6px rgba(139, 92, 246, 0.5));
+}
+
+.enemy-icon-skeleton {
+    color: #D1D5DB;
+    font-size: 1.5rem;
+}
+
+.enemy-icon-troll {
+    color: #6B7280;
+    font-size: 1.5rem;
+    filter: drop-shadow(0 0 6px rgba(107, 114, 128, 0.5));
+}
+
+.has-projectile .projectile-icon {
+    font-size: 1rem;
+    pointer-events: none;
+    filter: drop-shadow(0 0 6px rgba(255, 100, 0, 0.6));
+    animation: projectileAnim 0.3s ease-in-out infinite alternate;
+}
+
+@keyframes projectileAnim {
+    from { transform: scale(0.9); opacity: 0.8; }
+    to { transform: scale(1.1); opacity: 1; }
+}
+
+.cell-warning {
+    animation: warningPulse 0.5s ease-in-out infinite alternate;
+    z-index: 5;
+}
+
+@keyframes warningPulse {
+    from { background: rgba(255, 0, 0, 0.6); box-shadow: inset 0 0 16px rgba(255, 0, 0, 0.8); }
+    to { background: rgba(255, 50, 0, 0.9); box-shadow: inset 0 0 24px rgba(255, 0, 0, 1); }
+}
+
+.cell-explosion {
+    animation: cellExplosion 0.45s ease-out forwards;
+    z-index: 20;
+    pointer-events: none;
+}
+
+@keyframes cellExplosion {
+    0% { box-shadow: 0 0 0 0 rgba(255, 120, 0, 0.9); transform: scale(1); }
+    30% { box-shadow: 0 0 40px 20px rgba(255, 60, 0, 0.7); transform: scale(1.4); }
+    60% { box-shadow: 0 0 20px 10px rgba(200, 30, 0, 0.4); transform: scale(1.2); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); transform: scale(1); }
+}
+
+.cell.spike .spike-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.4rem;
+    height: 1.4rem;
+    transition: all 0.3s;
+}
+.cell.spike .spike-icon svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.cell.spike.spike-active {
+    background: rgba(200, 40, 40, 0.35);
+    border: 1px solid rgba(220, 50, 50, 0.5);
+    box-shadow: inset 0 0 12px rgba(220, 50, 50, 0.3);
+}
+
+.cell.spike.spike-active .spike-icon {
+    color: #ff4444;
+    animation: spikePulse 1s ease-in-out infinite alternate;
+}
+
+.cell.spike.spike-inactive {
+    background: rgba(80, 80, 80, 0.2);
+    border: 1px solid rgba(100, 100, 100, 0.2);
+}
+
+.cell.spike.spike-inactive .spike-icon {
+    color: #666;
+}
+
+@keyframes spikePulse {
+    from { transform: scale(1); filter: drop-shadow(0 0 4px rgba(255, 50, 50, 0.6)); }
+    to { transform: scale(1.15); filter: drop-shadow(0 0 10px rgba(255, 0, 0, 0.9)); }
+}
+
+.cell.chest .material-symbols-outlined {
+    color: #B8860B;
+    font-variation-settings: 'FILL' 1;
+    font-size: 1.3rem;
+    animation: chestFloat 2.5s ease-in-out infinite;
+    filter: drop-shadow(0 0 6px rgba(184, 134, 11, 0.5));
 }
 
 .cell.boss {
@@ -192,6 +294,26 @@
     font-size: 2rem;
     animation: bossPulse 2s ease-in-out infinite;
     filter: drop-shadow(0 0 8px rgba(139, 0, 0, 0.6));
+}
+
+.cell.boss-octopus {
+    background: linear-gradient(135deg, #0A2A3A, #0A1A2E);
+    border-color: #00668B;
+}
+
+.cell.boss-octopus .material-symbols-outlined {
+    color: #44AAFF;
+    filter: drop-shadow(0 0 8px rgba(0, 102, 139, 0.6));
+}
+
+.cell.boss-devil {
+    background: linear-gradient(135deg, #3A1A0A, #2E0A0A);
+    border-color: #8B4500;
+}
+
+.cell.boss-devil .material-symbols-outlined {
+    color: #FF8844;
+    filter: drop-shadow(0 0 8px rgba(139, 69, 0, 0.6));
 }
 
 .cell.start {

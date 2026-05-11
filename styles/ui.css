@@ -1,21 +1,34 @@
 .material-symbols-outlined {
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
+
 body {
     background-color: #141316;
     color: #e6e1e6;
 }
+
 .pixel-border {
     box-shadow: 0 4px 0 0 #0f160b;
 }
+
 .retro-shadow {
     box-shadow: 4px 4px 0px 0px #000000;
 }
 
 /* View system */
-.view { display: none; }
-.view.active { display: flex; flex-direction: column; min-height: 100vh; }
-#viewGame { overflow: hidden; }
+.view {
+    display: none;
+}
+
+.view.active {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+#viewGame {
+    overflow: hidden;
+}
 
 /* Menu card */
 .menu-card {
@@ -40,7 +53,10 @@ body {
     color: var(--color-primary);
 }
 
-.menu-logo svg { width: 100%; height: 100%; }
+.menu-logo svg {
+    width: 100%;
+    height: 100%;
+}
 
 .menu-title {
     font-size: 1.75rem;
@@ -54,7 +70,9 @@ body {
     font-size: 0.875rem;
 }
 
-.menu-form { margin-bottom: var(--spacing-md); }
+.menu-form {
+    margin-bottom: var(--spacing-md);
+}
 
 .menu-label {
     display: block;
@@ -84,7 +102,9 @@ body {
     box-shadow: 0 0 0 2px rgba(236, 91, 19, 0.3);
 }
 
-.menu-input::placeholder { color: var(--color-text-muted); }
+.menu-input::placeholder {
+    color: var(--color-text-muted);
+}
 
 .menu-error {
     color: #EF4444;
@@ -93,7 +113,9 @@ body {
     display: none;
 }
 
-.menu-error.show { display: block; }
+.menu-error.show {
+    display: block;
+}
 
 /* Menu buttons */
 .menu-btn {
@@ -118,11 +140,13 @@ body {
 }
 
 .menu-btn-play:disabled {
-    opacity: 0.5;
+    opacity: 0.8;
     cursor: not-allowed;
 }
 
-.menu-btn-play:hover:not(:disabled) { background: #d64f0f; }
+.menu-btn-play:hover:not(:disabled) {
+    background: #d64f0f;
+}
 
 .menu-btn-rankings {
     background: transparent;
@@ -136,7 +160,7 @@ body {
 }
 
 .menu-btn-continue {
-    background: #2d7a2d;
+    background: var(--color-success);
     color: white;
     margin-bottom: var(--spacing-sm);
 }
@@ -195,4 +219,394 @@ body {
     color: white;
 }
 
-.hidden { display: none !important; }
+.hidden {
+    display: none !important;
+}
+
+/* ── Dashboard HUD ── */
+.hud {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    background: rgba(30, 15, 36, 0.95);
+    border-bottom: 1px solid var(--color-border-purple);
+    flex-wrap: wrap;
+    transition: background 0.3s;
+}
+
+.hud-damage {
+    animation: hudDamageFlash 0.35s ease;
+}
+
+@keyframes hudDamageFlash {
+
+    0%,
+    100% {
+        background: rgba(30, 15, 36, 0.95);
+    }
+
+    50% {
+        background: rgba(239, 68, 68, 0.25);
+    }
+}
+
+.hud-stat {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.hud-hp-bar {
+    width: 80px;
+    height: 8px;
+    background: #333;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.hud-hp-fill {
+    height: 100%;
+    width: 100%;
+    background: #22C55E;
+    transition: width 0.3s, background 0.3s;
+    border-radius: 4px;
+}
+
+.hud-hp-text {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    min-width: 30px;
+}
+
+.hud-btn {
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 2px 10px;
+    cursor: pointer;
+    font-size: 0.7rem;
+    font-weight: 600;
+    transition: all var(--transition-fast);
+}
+
+.hud-btn:hover {
+    background: var(--color-primary-dark);
+}
+
+.hud-btn:active {
+    transform: scale(0.95);
+}
+
+/* ── Chest Tip Toast ── */
+.chest-tip {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #B8860B, #DAA520);
+    color: #1a1a1a;
+    padding: 12px 28px;
+    border-radius: var(--radius-lg);
+    font-weight: 700;
+    font-size: 0.9rem;
+    z-index: 500;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    box-shadow: 0 4px 20px rgba(184, 134, 11, 0.5);
+}
+
+.chest-tip.show {
+    opacity: 1;
+}
+
+/* ── Theme Toggle Button ── */
+.btn-theme {
+    background: transparent;
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border-purple);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.btn-theme:hover {
+    background: var(--color-accent-purple);
+    color: var(--color-text);
+    border-color: var(--color-primary);
+}
+
+.btn-theme:active {
+    transform: scale(0.92);
+}
+
+.btn-theme .material-symbols-outlined {
+    font-size: 1.25rem;
+    font-variation-settings: 'FILL' 1;
+}
+
+html.light .btn-theme {
+    color: var(--color-text-muted);
+    border-color: var(--color-border-purple);
+}
+
+html.light .btn-theme:hover {
+    background: var(--color-accent-purple);
+    color: var(--color-text);
+}
+
+/* ── Help Button (Menu) ── */
+.menu-btn-help {
+    background: transparent;
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border-purple);
+    margin-top: var(--spacing-sm);
+}
+
+.menu-btn-help:hover {
+    background: var(--color-accent-purple);
+    color: white;
+}
+
+.btn-help {
+    background: transparent;
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border-purple);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.btn-help:hover {
+    background: var(--color-accent-purple);
+    color: white;
+    border-color: var(--color-primary);
+}
+
+.btn-help:active {
+    transform: scale(0.92);
+}
+
+.btn-help .material-symbols-outlined {
+    font-size: 1.25rem;
+    font-variation-settings: 'FILL' 0;
+}
+
+/* ── Help Accordion Overlay ── */
+.help-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+}
+
+.help-overlay[hidden] {
+    display: none;
+}
+
+.help-modal {
+    background: var(--color-bg-light);
+    border: 1px solid var(--color-border-purple);
+    border-radius: var(--radius-lg);
+    max-width: 560px;
+    width: 90%;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-lg);
+    animation: fadeIn 0.3s ease-out;
+}
+
+.help-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--color-border-purple);
+    flex-shrink: 0;
+}
+
+.help-title {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.help-title .material-symbols-outlined {
+    color: var(--color-primary);
+    font-size: 1.5rem;
+}
+
+.help-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--spacing-md) var(--spacing-lg);
+}
+
+.help-footer {
+    display: flex;
+    justify-content: center;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-top: 1px solid var(--color-border-purple);
+    flex-shrink: 0;
+}
+
+/* ── Accordion ── */
+.accordion-item {
+    border: 1px solid var(--color-border-purple);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-sm);
+    overflow: hidden;
+    background: var(--color-bg-dark);
+    transition: border-color var(--transition-fast);
+}
+
+.accordion-item:hover {
+    border-color: var(--color-primary);
+}
+
+.accordion-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    background: var(--color-bg-elevated);
+    border: none;
+    color: var(--color-text);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition-fast);
+    text-align: left;
+    font-family: var(--font-primary);
+}
+
+.accordion-header:hover {
+    background: var(--color-accent-purple);
+}
+
+.accordion-header .accordion-icon {
+    color: var(--color-primary);
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.accordion-header .accordion-arrow {
+    margin-left: auto;
+    font-size: 1.25rem;
+    transition: transform var(--transition-fast);
+    color: var(--color-text-muted);
+}
+
+.accordion-header.open .accordion-arrow {
+    transform: rotate(180deg);
+}
+
+.accordion-body {
+    display: none;
+    padding: var(--spacing-md);
+    border-top: 1px solid var(--color-border-purple);
+    background: var(--color-bg-dark);
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: var(--color-text);
+}
+
+.accordion-body.open {
+    display: block;
+}
+
+.accordion-body p {
+    margin-bottom: var(--spacing-sm);
+    color: var(--color-text);
+}
+
+.accordion-body ul {
+    padding-left: var(--spacing-lg);
+    margin-bottom: var(--spacing-sm);
+}
+
+.accordion-body li {
+    margin-bottom: var(--spacing-xs);
+    color: var(--color-text-dim);
+}
+
+.accordion-body li strong {
+    color: var(--color-text);
+}
+
+.accordion-body em {
+    color: var(--color-text-muted);
+    font-style: italic;
+}
+
+html.light .help-modal {
+    background: var(--color-bg-light);
+    border-color: var(--color-border-purple);
+}
+
+html.light .accordion-item {
+    background: var(--color-bg);
+    border-color: var(--color-border-purple);
+}
+
+html.light .accordion-header {
+    background: var(--color-bg-elevated);
+    color: var(--color-text);
+}
+
+html.light .accordion-header:hover {
+    background: var(--color-accent-purple);
+}
+
+html.light .accordion-body {
+    background: var(--color-bg);
+    border-top-color: var(--color-border-purple);
+    color: var(--color-text);
+}
+
+html.light .help-header {
+    border-bottom-color: var(--color-border-purple);
+}
+
+html.light .help-footer {
+    border-top-color: var(--color-border-purple);
+}
+
+html.light .menu-btn-help {
+    color: var(--color-text-muted);
+    border-color: var(--color-border-purple);
+}
+
+html.light .menu-btn-help:hover {
+    background: var(--color-accent-purple);
+    color: var(--color-text);
+}
+
+/* ── Light Theme HUD ── */
+html.light .hud-stat {
+    color: #e6e1e6;
+}

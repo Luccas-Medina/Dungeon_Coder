@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Página Não Encontrada | Dungeon Coder</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;700&family=Noto+Sans:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/design-system.css">
+    <link rel="stylesheet" href="styles/ui.css">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: var(--color-bg-dark);
+            overflow: hidden;
+        }
+        .error-card {
+            text-align: center;
+            max-width: 420px;
+            width: 90%;
+            background: var(--color-bg-light);
+            border: 1px solid var(--color-border-purple);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-xl);
+            box-shadow: var(--shadow-lg);
+            animation: fadeIn 0.4s ease-out;
+        }
+        .error-code {
+            font-family: var(--font-display);
+            font-size: 4rem;
+            color: var(--color-primary);
+            margin-bottom: var(--spacing-md);
+            text-shadow: 0 0 20px rgba(236, 91, 19, 0.3);
+        }
+        .error-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: var(--spacing-sm);
+        }
+        .error-text {
+            color: var(--color-text-muted);
+            font-size: 0.875rem;
+            margin-bottom: var(--spacing-lg);
+            line-height: 1.5;
+        }
+        .error-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            background: var(--color-primary);
+            color: white;
+            padding: 12px 24px;
+            border-radius: var(--radius-xl);
+            font-weight: 700;
+            font-size: 1rem;
+            text-decoration: none;
+            transition: all var(--transition-fast);
+            cursor: pointer;
+            border: none;
+            font-family: var(--font-primary);
+        }
+        .error-btn:hover {
+            background: var(--color-primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-glow-action);
+        }
+        .error-btn:active {
+            transform: scale(0.97);
+        }
+        .redirect-text {
+            color: var(--color-text-dim);
+            font-size: 0.75rem;
+            margin-top: var(--spacing-md);
+        }
+        .countdown {
+            color: var(--color-primary-light);
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-card">
+        <div class="error-code">404</div>
+        <h1 class="error-title">Página Não Encontrada</h1>
+        <p class="error-text">Oops! O caminho que você tentou seguir não existe neste reino. Até o melhor aventureiro se perde às vezes...</p>
+        <a href="/" class="error-btn">
+            <span class="material-symbols-outlined" style="font-variation-settings:'FILL'1">home</span>
+            Voltar ao Início
+        </a>
+        <p class="redirect-text">Redirecionando em <span class="countdown" id="countdown">10</span> segundos...</p>
+    </div>
+    <script>
+        let seconds = 10;
+        const countEl = document.getElementById('countdown');
+        const interval = setInterval(() => {
+            seconds--;
+            countEl.textContent = seconds;
+            if (seconds <= 0) {
+                clearInterval(interval);
+                window.location.href = '/';
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
