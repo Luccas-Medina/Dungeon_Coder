@@ -1,0 +1,147 @@
+@keyframes pulseBlock {
+    0%, 100% {
+        box-shadow: var(--shadow-md), 0 0 10px rgba(236, 91, 19, 0.5);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: var(--shadow-md), 0 0 20px rgba(236, 91, 19, 0.8);
+        transform: scale(1.02);
+    }
+}
+
+@keyframes snap {
+    0% {
+        transform: translateY(8px);
+        opacity: 0.7;
+    }
+    60% {
+        transform: translateY(-3px);
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+}
+
+@keyframes coinFloat {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-4px) rotate(5deg); }
+}
+
+@keyframes keyGlow {
+    0%, 100% { filter: brightness(1) drop-shadow(0 0 4px rgba(236, 91, 19, 0.5)); transform: scale(1); }
+    50% { filter: brightness(1.3) drop-shadow(0 0 8px rgba(236, 91, 19, 0.8)); transform: scale(1.1); }
+}
+
+@keyframes enemyPulse {
+    0%, 100% { transform: scale(1); filter: brightness(1); }
+    50% { transform: scale(1.08); filter: brightness(1.2); }
+}
+
+@keyframes bossPulse {
+    0%, 100% { transform: scale(1); filter: brightness(1) drop-shadow(0 0 8px rgba(139, 0, 0, 0.5)); }
+    50% { transform: scale(1.05); filter: brightness(1.3) drop-shadow(0 0 16px rgba(139, 0, 0, 0.8)); }
+}
+
+@keyframes attackSwing {
+    0% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(15deg) scale(1.2); }
+    100% { transform: rotate(0deg) scale(1); }
+}
+
+@keyframes collect {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.5) rotate(180deg); opacity: 0.5; }
+    100% { transform: scale(0) rotate(360deg); opacity: 0; }
+}
+
+@keyframes doorUnlock {
+    0% { filter: brightness(1); transform: scale(1); }
+    50% { filter: brightness(1.5) drop-shadow(0 0 10px gold); transform: scale(1.1); }
+    100% { filter: brightness(1); transform: scale(1); }
+}
+
+@keyframes slideIn {
+    from { transform: translateY(-10px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes gridHighlight {
+    0%, 100% { box-shadow: inset 0 0 10px rgba(236, 91, 19, 0.3); }
+    50% { box-shadow: inset 0 0 20px rgba(236, 91, 19, 0.6); }
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.block-executing {
+    animation: pulseBlock 0.8s ease-in-out infinite;
+}
+
+.block-snap {
+    animation: snap 0.2s ease-out;
+}
+
+.shake {
+    animation: shake 0.5s ease-in-out;
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.fade-out {
+    animation: fadeOut 0.3s ease-in forwards;
+}
+
+.collect {
+    animation: collect 0.4s ease-out forwards;
+}
+
+.door-unlock {
+    animation: doorUnlock 0.6s ease-in-out;
+}
+
+.slide-in {
+    animation: slideIn 0.3s ease-out;
+}
+
+.grid-highlight {
+    animation: gridHighlight 1s ease-in-out infinite;
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}

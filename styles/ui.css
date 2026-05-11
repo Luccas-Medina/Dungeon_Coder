@@ -1,0 +1,198 @@
+.material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+body {
+    background-color: #141316;
+    color: #e6e1e6;
+}
+.pixel-border {
+    box-shadow: 0 4px 0 0 #0f160b;
+}
+.retro-shadow {
+    box-shadow: 4px 4px 0px 0px #000000;
+}
+
+/* View system */
+.view { display: none; }
+.view.active { display: flex; flex-direction: column; min-height: 100vh; }
+#viewGame { overflow: hidden; }
+
+/* Menu card */
+.menu-card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--color-bg-light);
+    border: 1px solid var(--color-border-purple);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-xl);
+    box-shadow: var(--shadow-lg);
+}
+
+.menu-card-header {
+    text-align: center;
+    margin-bottom: var(--spacing-lg);
+}
+
+.menu-logo {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto var(--spacing-md);
+    color: var(--color-primary);
+}
+
+.menu-logo svg { width: 100%; height: 100%; }
+
+.menu-title {
+    font-size: 1.75rem;
+    font-weight: 900;
+    color: white;
+    margin-bottom: var(--spacing-xs);
+}
+
+.menu-subtitle {
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+}
+
+.menu-form { margin-bottom: var(--spacing-md); }
+
+.menu-label {
+    display: block;
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--spacing-sm);
+}
+
+.menu-input {
+    width: 100%;
+    height: 48px;
+    background: var(--color-accent-purple);
+    border: 1px solid var(--color-border-purple);
+    border-radius: var(--radius-lg);
+    padding: 0 var(--spacing-md);
+    color: white;
+    font-size: 0.875rem;
+    transition: all var(--transition-fast);
+    outline: none;
+}
+
+.menu-input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(236, 91, 19, 0.3);
+}
+
+.menu-input::placeholder { color: var(--color-text-muted); }
+
+.menu-error {
+    color: #EF4444;
+    font-size: 0.75rem;
+    margin-top: var(--spacing-xs);
+    display: none;
+}
+
+.menu-error.show { display: block; }
+
+/* Menu buttons */
+.menu-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: 14px var(--spacing-md);
+    border-radius: var(--radius-xl);
+    font-weight: 900;
+    font-size: 1.125rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    border: none;
+}
+
+.menu-btn-play {
+    background: var(--color-primary);
+    color: white;
+    margin-bottom: var(--spacing-sm);
+}
+
+.menu-btn-play:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.menu-btn-play:hover:not(:disabled) { background: #d64f0f; }
+
+.menu-btn-rankings {
+    background: transparent;
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border-purple);
+}
+
+.menu-btn-rankings:hover {
+    background: var(--color-accent-purple);
+    color: white;
+}
+
+.menu-btn-continue {
+    background: #2d7a2d;
+    color: white;
+    margin-bottom: var(--spacing-sm);
+}
+
+.menu-btn-continue:hover {
+    background: #3a9e3a;
+}
+
+/* Rankings view */
+.rankings-view-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--spacing-xl);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.rankings-view-card {
+    width: 100%;
+    max-width: 600px;
+    background: var(--color-bg-light);
+    border: 1px solid var(--color-border-purple);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-xl);
+    box-shadow: var(--shadow-lg);
+}
+
+.rankings-view-title {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: var(--spacing-lg);
+}
+
+.btn-back {
+    background: transparent;
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border-purple);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.btn-back:hover {
+    background: var(--color-accent-purple);
+    color: white;
+}
+
+.hidden { display: none !important; }

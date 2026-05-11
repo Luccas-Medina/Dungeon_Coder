@@ -1,0 +1,390 @@
+:root {
+    /* Core colors from mobile/desktop references */
+    --color-primary: #ec5b13;
+    --color-primary-dark: #9a3b0c;
+    --color-primary-light: #ff8c5a;
+
+    --color-bg: #141316;
+    --color-bg-dark: #1e0f24;
+    --color-bg-light: #2d1736;
+    --color-bg-elevated: #40204b;
+
+    --color-game-green: #172211;
+    --color-game-border: #304724;
+
+    --color-border-purple: #5b2e6b;
+    --color-accent-purple: #40204b;
+    --color-text-muted: #bd8dce;
+
+    --color-text: #e6e1e6;
+    --color-text-dim: #948e99;
+
+    --color-success: #22C55E;
+    --color-danger: #EF4444;
+    --color-hole: #0d0508;
+
+    --color-border: var(--color-border-purple);
+    --color-border-light: var(--color-bg-light);
+
+    /* Legacy color mappings */
+    --color-action: var(--color-primary);
+    --color-action-dark: var(--color-primary-dark);
+    --color-action-light: var(--color-primary-light);
+    --color-control: #FF8C00;
+    --color-control-dark: #CC7000;
+    --color-control-light: #FFA940;
+    --color-event: #FFD700;
+    --color-event-dark: #CCAC00;
+    --color-event-light: #FFE44D;
+
+    /* Typography */
+    --font-primary: 'Public Sans', 'Noto Sans', system-ui, -apple-system, sans-serif;
+    --font-display: 'Press Start 2P', cursive;
+    --font-mono: 'Consolas', 'Courier New', monospace;
+
+    /* Spacing */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    --spacing-unit: 4px;
+    --spacing-margin: 24px;
+    --spacing-gutter: 16px;
+    --spacing-panel-padding: 20px;
+
+    /* Border radius */
+    --radius-sm: 0.25rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+    --radius-full: 9999px;
+
+    /* Shadows */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+    --shadow-glow-action: 0 0 15px rgba(236, 91, 19, 0.4);
+    --shadow-glow-control: 0 0 15px rgba(255, 140, 0, 0.4);
+    --shadow-glow-event: 0 0 15px rgba(255, 215, 0, 0.4);
+
+    /* Transitions */
+    --transition-fast: 150ms ease;
+    --transition-normal: 250ms ease;
+    --transition-slow: 400ms ease;
+
+    /* Grid */
+    --grid-size: 10;
+    --cell-size: 48px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-primary);
+    background: var(--color-bg-dark);
+    color: var(--color-text);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Header */
+.app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: var(--color-bg-dark);
+    border-bottom: 1px solid var(--color-border-purple);
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.header-brand {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.header-brand h1 {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.level-badge {
+    background: var(--color-primary);
+    color: white;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-family: var(--font-mono);
+}
+
+.header-stats {
+    display: flex;
+    gap: var(--spacing-md);
+}
+
+.stat {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: var(--color-bg-elevated);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.header-controls {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-left: auto;
+}
+
+/* Buttons */
+.btn {
+    font-family: var(--font-primary);
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-play {
+    background: var(--color-success);
+    color: white;
+}
+
+.btn-play:hover:not(:disabled) {
+    background: #16A34A;
+    box-shadow: var(--shadow-glow-action);
+}
+
+.btn-pause {
+    background: var(--color-event);
+    color: var(--color-bg);
+}
+
+.btn-pause:hover:not(:disabled) {
+    background: var(--color-event-dark);
+}
+
+.btn-clear {
+    background: var(--color-danger);
+    color: white;
+}
+
+.btn-clear:hover:not(:disabled) {
+    background: #DC2626;
+}
+
+.btn-small {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: 0.75rem;
+    background: var(--color-bg-elevated);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+}
+
+.btn-small:hover:not(:disabled) {
+    background: var(--color-border-light);
+}
+
+/* Fixed run button (mobile) */
+.run-button-fixed {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: var(--spacing-lg);
+    z-index: 50;
+    background: linear-gradient(to top, var(--color-bg), transparent);
+}
+
+.run-button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
+    background: var(--color-primary);
+    height: 56px;
+    border-radius: var(--radius-xl);
+    color: white;
+    font-family: var(--font-display);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    box-shadow: 0 6px 0 var(--color-primary-dark);
+    transition: all var(--transition-fast);
+    border: none;
+    cursor: pointer;
+}
+
+.run-button:active {
+    transform: translateY(1px);
+    box-shadow: none;
+}
+
+/* Main layout */
+.app-container {
+    display: grid;
+    grid-template-columns: 20% 50% 30%;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+#gameWrapper {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: var(--color-game-green);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--color-game-border);
+    border-radius: 10px;
+}
+
+/* Media queries */
+@media (max-width: 1024px) {
+    .app-container {
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-bottom: 100px;
+    }
+
+    .palette {
+        max-height: 280px;
+        overflow-y: auto;
+        flex-shrink: 0;
+    }
+
+    .workspace-container {
+        min-height: 400px;
+        max-height: 520px;
+        flex-shrink: 0;
+    }
+
+    .stage-container {
+        min-height: 580px;
+        flex-shrink: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .workspace-container {
+        min-height: 380px;
+        max-height: 500px;
+    }
+
+    .stage-container {
+        min-height: 540px;
+    }
+}
+
+@media (max-width: 640px) {
+    .app-header {
+        flex-direction: column;
+        align-items: stretch;
+        padding: var(--spacing-xs) var(--spacing-sm);
+        gap: 4px;
+    }
+
+    .header-brand {
+        justify-content: center;
+    }
+
+    .header-stats {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .header-controls {
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-left: 0;
+    }
+
+    :root {
+        --cell-size: 36px;
+    }
+
+    .workspace-container {
+        min-height: 360px;
+        max-height: 480px;
+    }
+
+    .stage-container {
+        min-height: 520px;
+    }
+}
+
+@media (max-width: 480px) {
+    :root {
+        --cell-size: 32px;
+    }
+
+    .app-container {
+        gap: 12px;
+        padding: 8px;
+        padding-bottom: 80px;
+    }
+
+    .palette {
+        max-height: 200px;
+        padding: var(--spacing-sm);
+    }
+
+    .workspace-container {
+        min-height: 340px;
+        max-height: 440px;
+        padding: var(--spacing-sm);
+    }
+
+    .stage-container {
+        min-height: 450px;
+        padding: var(--spacing-sm);
+    }
+}

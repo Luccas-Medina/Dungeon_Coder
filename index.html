@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dungeon Coder</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;700&family=Noto+Sans:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/design-system.css">
+    <link rel="stylesheet" href="styles/blocks.css">
+    <link rel="stylesheet" href="styles/stage.css">
+    <link rel="stylesheet" href="styles/animations.css">
+    <link rel="stylesheet" href="styles/ui.css">
+    <link rel="icon" type="image/png" href="../assets/favicon.png">
+</head>
+<body class="font-body-md overflow-x-hidden">
+    <!-- View: Menu -->
+    <div id="viewMenu" class="view active">
+        <header class="app-header">
+            <div class="header-brand">
+                <div class="size-6 text-primary">
+                    <svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                        <path clip-rule="evenodd" d="M39.475 21.6262C40.358 21.4363 40.6863 21.5589 40.7581 21.5934C40.7876 21.655 40.8547 21.857 40.8082 22.3336C40.7408 23.0255 40.4502 24.0046 39.8572 25.2301C38.6799 27.6631 36.5085 30.6631 33.5858 33.5858C30.6631 36.5085 27.6632 38.6799 25.2301 39.8572C24.0046 40.4502 23.0255 40.7407 22.3336 40.8082C21.8571 40.8547 21.6551 40.7875 21.5934 40.7581C21.5589 40.6863 21.4363 40.358 21.6262 39.475C21.8562 38.4054 22.4689 36.9657 23.5038 35.2817C24.7575 33.2417 26.5497 30.9744 28.7621 28.762C30.9744 26.5497 33.2417 24.7574 35.2817 23.5037C36.9657 22.4689 38.4054 21.8562 39.475 21.6262ZM4.41189 29.2403L18.7597 43.5881C19.8813 44.7097 21.4027 44.9179 22.7217 44.7893C24.0585 44.659 25.5148 44.1631 26.9723 43.4579C29.9052 42.0387 33.2618 39.5667 36.4142 36.4142C39.5667 33.2618 42.0387 29.9052 43.4579 26.9723C44.1631 25.5148 44.659 24.0585 44.7893 22.7217C44.9179 21.4027 44.7097 19.8813 43.5881 18.7597L29.2403 4.41187C27.8527 3.02428 25.8765 3.02573 24.2861 3.36776C22.6081 3.72863 20.7334 4.58419 18.8396 5.74801C16.4978 7.18716 13.9881 9.18353 11.5858 11.5858C9.18354 13.988 7.18717 16.4978 5.74802 18.8396C4.58421 20.7334 3.72865 22.6081 3.36778 24.2861C3.02574 25.8765 3.02429 27.8527 4.41189 29.2403Z" fill="currentColor" fill-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <h1>Dungeon Coder</h1>
+            </div>
+        </header>
+        <main class="grid-pattern" style="background-color:#1e0f24;display:flex;flex:1;align-items:center;justify-content:center;">
+            <div class="menu-card">
+                <div class="menu-card-header">
+                    <div class="menu-logo">
+                        <svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                            <path clip-rule="evenodd" d="M39.475 21.6262C40.358 21.4363 40.6863 21.5589 40.7581 21.5934C40.7876 21.655 40.8547 21.857 40.8082 22.3336C40.7408 23.0255 40.4502 24.0046 39.8572 25.2301C38.6799 27.6631 36.5085 30.6631 33.5858 33.5858C30.6631 36.5085 27.6632 38.6799 25.2301 39.8572C24.0046 40.4502 23.0255 40.7407 22.3336 40.8082C21.8571 40.8547 21.6551 40.7875 21.5934 40.7581C21.5589 40.6863 21.4363 40.358 21.6262 39.475C21.8562 38.4054 22.4689 36.9657 23.5038 35.2817C24.7575 33.2417 26.5497 30.9744 28.7621 28.762C30.9744 26.5497 33.2417 24.7574 35.2817 23.5037C36.9657 22.4689 38.4054 21.8562 39.475 21.6262ZM4.41189 29.2403L18.7597 43.5881C19.8813 44.7097 21.4027 44.9179 22.7217 44.7893C24.0585 44.659 25.5148 44.1631 26.9723 43.4579C29.9052 42.0387 33.2618 39.5667 36.4142 36.4142C39.5667 33.2618 42.0387 29.9052 43.4579 26.9723C44.1631 25.5148 44.659 24.0585 44.7893 22.7217C44.9179 21.4027 44.7097 19.8813 43.5881 18.7597L29.2403 4.41187C27.8527 3.02428 25.8765 3.02573 24.2861 3.36776C22.6081 3.72863 20.7334 4.58419 18.8396 5.74801C16.4978 7.18716 13.9881 9.18353 11.5858 11.5858C9.18354 13.988 7.18717 16.4978 5.74802 18.8396C4.58421 20.7334 3.72865 22.6081 3.36778 24.2861C3.02574 25.8765 3.02429 27.8527 4.41189 29.2403Z" fill="currentColor" fill-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                    <h1 class="menu-title">Dungeon Coder</h1>
+                    <p class="menu-subtitle">Master the maze with code blocks</p>
+                </div>
+                <div class="menu-form">
+                    <label class="menu-label" for="menuPlayerName">PLAYER NAME</label>
+                    <input class="menu-input" id="menuPlayerName" type="text" placeholder="Enter your name..." maxlength="20" autocomplete="off"/>
+                    <div id="menuNameError" class="menu-error">Please enter your name to continue</div>
+                </div>
+                <button id="menuPlayBtn" disabled class="menu-btn menu-btn-play">
+                    <span class="material-symbols-outlined" style="font-variation-settings:'FILL'1">play_arrow</span>
+                    PLAY
+                </button>
+                <button id="menuContinueBtn" class="menu-btn menu-btn-continue" style="display:none;">
+                    <span class="material-symbols-outlined" style="font-variation-settings:'FILL'1">replay</span>
+                    CONTINUAR
+                </button>
+                <button id="menuRankingsBtn" class="menu-btn menu-btn-rankings">
+                    <span class="material-symbols-outlined">leaderboard</span>
+                    RANKINGS
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- View: Game -->
+    <div id="viewGame" class="view">
+    <div id="gameWrapper">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-brand">
+                <div class="size-6 text-primary">
+                    <svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                        <path clip-rule="evenodd" d="M39.475 21.6262C40.358 21.4363 40.6863 21.5589 40.7581 21.5934C40.7876 21.655 40.8547 21.857 40.8082 22.3336C40.7408 23.0255 40.4502 24.0046 39.8572 25.2301C38.6799 27.6631 36.5085 30.6631 33.5858 33.5858C30.6631 36.5085 27.6632 38.6799 25.2301 39.8572C24.0046 40.4502 23.0255 40.7407 22.3336 40.8082C21.8571 40.8547 21.6551 40.7875 21.5934 40.7581C21.5589 40.6863 21.4363 40.358 21.6262 39.475C21.8562 38.4054 22.4689 36.9657 23.5038 35.2817C24.7575 33.2417 26.5497 30.9744 28.7621 28.762C30.9744 26.5497 33.2417 24.7574 35.2817 23.5037C36.9657 22.4689 38.4054 21.8562 39.475 21.6262ZM4.41189 29.2403L18.7597 43.5881C19.8813 44.7097 21.4027 44.9179 22.7217 44.7893C24.0585 44.659 25.5148 44.1631 26.9723 43.4579C29.9052 42.0387 33.2618 39.5667 36.4142 36.4142C39.5667 33.2618 42.0387 29.9052 43.4579 26.9723C44.1631 25.5148 44.659 24.0585 44.7893 22.7217C44.9179 21.4027 44.7097 19.8813 43.5881 18.7597L29.2403 4.41187C27.8527 3.02428 25.8765 3.02573 24.2861 3.36776C22.6081 3.72863 20.7334 4.58419 18.8396 5.74801C16.4978 7.18716 13.9881 9.18353 11.5858 11.5858C9.18354 13.988 7.18717 16.4978 5.74802 18.8396C4.58421 20.7334 3.72865 22.6081 3.36778 24.2861C3.02574 25.8765 3.02429 27.8527 4.41189 29.2403Z" fill="currentColor" fill-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <h1>Dungeon Coder</h1>
+                <span class="level-badge" id="levelBadge">Fase 1</span>
+                <span class="star-display" id="starDisplay">
+                    <span class="star" id="headerStar1">☆</span>
+                    <span class="star" id="headerStar2">☆</span>
+                    <span class="star" id="headerStar3">☆</span>
+                    <div class="star-tooltip" id="starTooltip">
+                        <div class="star-tooltip-title">⭐ Estrelas da Fase</div>
+                        <div class="star-tooltip-item" data-index="0">
+                            <span class="star-tooltip-icon" id="tipStar1">☆</span>
+                            <span class="star-tooltip-text">Completar a fase</span>
+                        </div>
+                        <div class="star-tooltip-item" data-index="1">
+                            <span class="star-tooltip-icon" id="tipStar2">☆</span>
+                            <span class="star-tooltip-text">Completar com <strong>0 mortes</strong></span>
+                        </div>
+                        <div class="star-tooltip-item" data-index="2">
+                            <span class="star-tooltip-icon" id="tipStar3">☆</span>
+                            <span class="star-tooltip-text">Completar com <strong>máximo 20 movimentos</strong></span>
+                        </div>
+                        <div class="star-tooltip-footer">Meta: ★★★</div>
+                    </div>
+                </span>
+            </div>
+
+            <div class="header-player hidden lg:flex">
+                <input type="text" id="playerName" placeholder="Seu nome" maxlength="20">
+            </div>
+            <div class="header-controls lg:flex">
+                <button id="btnPlay" class="btn btn-play" title="Executar Código">▶ Executar</button>
+                <button id="btnPause" class="btn btn-pause" title="Pausar Execução" disabled>⏸ Pausar</button>
+                <button id="btnClear" class="btn btn-clear" title="Limpar Workspace">🗑 Limpar</button>
+                <button id="btnBackToMenu" class="btn-back" title="Voltar ao Menu">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                    <span>Menu</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="app-container">
+            <!-- Left Sidebar: Palette (20%) -->
+            <aside class="palette" id="palette">
+                <h2 class="palette-title">Block Palette</h2>
+
+                <div class="palette-category" data-category="action">
+                    <h3 class="category-title category-action">Action</h3>
+                    <div class="palette-blocks" id="paletteAction">
+                        <div class="block block-action" data-type="moveUp" draggable="true" data-label="Mover Para Cima" data-icon="arrow_upward">
+                            <span class="material-symbols-outlined block-icon">arrow_upward</span>
+                            <span class="block-label">Move Up</span>
+                        </div>
+                        <div class="block block-action" data-type="moveDown" draggable="true" data-label="Mover Baixo" data-icon="arrow_downward">
+                            <span class="material-symbols-outlined block-icon">arrow_downward</span>
+                            <span class="block-label">Move Down</span>
+                        </div>
+                        <div class="block block-action" data-type="moveLeft" draggable="true" data-label="Mover Esquerda" data-icon="arrow_back">
+                            <span class="material-symbols-outlined block-icon">arrow_back</span>
+                            <span class="block-label">Move Left</span>
+                        </div>
+                        <div class="block block-action" data-type="moveRight" draggable="true" data-label="Mover Direita" data-icon="arrow_forward">
+                            <span class="material-symbols-outlined block-icon">arrow_forward</span>
+                            <span class="block-label">Move Right</span>
+                        </div>
+                        <div class="block block-action" data-type="attack" draggable="true" data-label="Atacar" data-icon="swords">
+                            <span class="material-symbols-outlined block-icon">swords</span>
+                            <span class="block-label">Attack</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="palette-category" data-category="control">
+                    <h3 class="category-title category-control">Control</h3>
+                    <div class="palette-blocks" id="paletteControl">
+                        <div class="block block-control" data-type="repeat" draggable="true" data-label="Repetir" data-icon="loop">
+                            <span class="material-symbols-outlined block-icon">loop</span>
+                            <span class="block-label">Repetir</span>
+                        </div>
+                    </div>
+                </div>
+
+            </aside>
+
+            <!-- Center Workspace: Drag & Drop (50%) -->
+            <section class="workspace-container">
+                <div class="workspace-header">
+                    <h2>
+                        <span class="material-symbols-outlined text-text-muted text-sm">terminal</span>
+                        workspace.script
+                    </h2>
+                    <div class="workspace-info" id="workspaceInfo">0 blocos</div>
+                    <!-- <button class="text-text-muted hover:text-white flex items-center gap-1 text-xs" id="btnClearWorkspace">
+                        <span class="material-symbols-outlined text-sm">delete</span>
+                        Clear Workspace
+                    </button> -->
+                </div>
+                <div class="workspace custom-scrollbar" id="workspace">
+                    <div class="workspace-placeholder" id="workspacePlaceholder">
+                        <p>📌 Drag blocks from palette here</p>
+                        <p class="placeholder-sub">Build your command sequence!</p>
+                    </div>
+                </div>
+                <div class="trash-zone" id="trashZone">
+                    <span class="material-symbols-outlined trash-icon">delete</span>
+                    <span class="trash-label">Drag here to delete</span>
+                </div>
+            </section>
+
+            <!-- Right Stage: Grid & Leaderboard (30%) -->
+            <section class="stage-container">
+                <div class="stage-header">
+                    <h2>
+                        <span class="material-symbols-outlined text-primary">forest</span>
+                        <span id="stageLevelTitle">Level 1: Forest</span>
+                    </h2>
+                    <button class="stage-level sound-toggle" id="soundToggle" title="Alternar música">
+                        <span class="material-symbols-outlined" id="soundIcon">volume_up</span>
+                    </button>
+                </div>
+                <div class="stage forest-stage" id="stage">
+                    <div class="grid" id="grid">
+                        <div class="actor" id="actor">
+                            <span class="actor-emoji material-symbols-outlined">smart_toy</span>
+                            <span class="actor-direction"></span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Objective -->
+                <div class="objective-info">
+                    <p id="objectiveText">Bem-vindo, Codificador. Colete a chave e as moedas para destrancar o Portal da Floresta.</p>
+                    <div class="objective-stats">
+                        <div class="stat-item">
+                            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1; color:#FFD700; font-size:1rem;">monetization_on</span>
+                            <span class="stat-value" id="objectiveCoins">0/0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1; color:var(--color-primary); font-size:1rem;">vpn_key</span>
+                            <span class="stat-value" id="objectiveKeys">0/0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stage-controls hidden lg:flex">
+                    <button id="btnPrevLevel" class="btn btn-small" title="Previous Level">⬅️</button>
+                    <button id="btnResetLevel" class="btn btn-small" title="Reset Level">🔄 Reset</button>
+                    <button id="btnNextLevel" class="btn btn-small" title="Next Level">➡️</button>
+                </div>
+                <div class="stage-legend hidden lg:flex">
+                    <div class="legend-item">🤖 Player</div>
+                    <div class="legend-item">🪙 Coin</div>
+                    <div class="legend-item">🔑 Key</div>
+                    <div class="legend-item">🚪 Door</div>
+                    <div class="legend-item">🕳️ Hole</div>
+                    <div class="legend-item">👾 Enemy</div>
+                    <div class="legend-item">👹 Boss</div>
+                </div>
+            </section>
+        </main>
+
+
+
+        <!-- Mobile Run Button Overlay -->
+        <div class="run-button-fixed">
+            <button class="run-button" id="btnPlayMobile">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                Run Program
+            </button>
+        </div>
+
+        <!-- Desktop Bottom Control Bar -->
+        <footer class="hidden lg:flex h-20 bg-panel-dark border-t border-accent-purple px-10 items-center justify-between z-20">
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-2">
+                    <span class="text-text-muted text-xs font-bold uppercase">Playback Speed</span>
+                    <input type="range" class="w-32 accent-primary bg-accent-purple h-1.5 rounded-lg appearance-none cursor-pointer">
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <button class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-lg active:scale-95" id="btnResetDesktop">
+                    <span class="material-symbols-outlined">restart_alt</span>
+                    RESET
+                </button>
+                <button class="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-black px-6 py-2.5 rounded-xl font-bold transition-all shadow-lg active:scale-95" id="btnPauseDesktop">
+                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">pause</span>
+                    PAUSE
+                </button>
+                <button class="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-black px-10 py-3 rounded-xl font-black transition-all shadow-[0_0_15px_rgba(34,197,94,0.4)] active:scale-95" id="btnRunDesktop">
+                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                    RUN CODE
+                </button>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="text-right">
+                    <p class="text-[10px] text-text-muted font-bold">CURRENT RANK</p>
+                    <p class="text-sm font-bold text-primary" id="currentRank">Master Scripter</p>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-accent-purple border border-border-purple flex items-center justify-center">
+                    <span class="material-symbols-outlined text-primary">military_tech</span>
+                </div>
+            </div>
+        </footer>
+
+        <!-- Modal -->
+        <div class="modal-overlay" id="modalOverlay" hidden>
+            <div class="modal" id="modal">
+                <h2 id="modalTitle"></h2>
+                <div class="modal-stars" id="modalStars">
+                    <span class="star star-lg" id="modalStar1">☆</span>
+                    <span class="star star-lg" id="modalStar2">☆</span>
+                    <span class="star star-lg" id="modalStar3">☆</span>
+                </div>
+                <div class="record-badge hidden" id="recordBadge">🏆 Novo Recorde!</div>
+                <p id="modalMessage"></p>
+                <div class="modal-actions">
+                    <button class="btn btn-play" id="modalBtnPrimary"></button>
+                    <button class="btn btn-clear" id="modalBtnSecondary"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- View: Rankings -->
+    <div id="viewRankings" class="view">
+        <header class="app-header">
+            <div class="header-brand">
+                <div class="size-6 text-primary">
+                    <svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                        <path clip-rule="evenodd" d="M39.475 21.6262C40.358 21.4363 40.6863 21.5589 40.7581 21.5934C40.7876 21.655 40.8547 21.857 40.8082 22.3336C40.7408 23.0255 40.4502 24.0046 39.8572 25.2301C38.6799 27.6631 36.5085 30.6631 33.5858 33.5858C30.6631 36.5085 27.6632 38.6799 25.2301 39.8572C24.0046 40.4502 23.0255 40.7407 22.3336 40.8082C21.8571 40.8547 21.6551 40.7875 21.5934 40.7581C21.5589 40.6863 21.4363 40.358 21.6262 39.475C21.8562 38.4054 22.4689 36.9657 23.5038 35.2817C24.7575 33.2417 26.5497 30.9744 28.7621 28.762C30.9744 26.5497 33.2417 24.7574 35.2817 23.5037C36.9657 22.4689 38.4054 21.8562 39.475 21.6262ZM4.41189 29.2403L18.7597 43.5881C19.8813 44.7097 21.4027 44.9179 22.7217 44.7893C24.0585 44.659 25.5148 44.1631 26.9723 43.4579C29.9052 42.0387 33.2618 39.5667 36.4142 36.4142C39.5667 33.2618 42.0387 29.9052 43.4579 26.9723C44.1631 25.5148 44.659 24.0585 44.7893 22.7217C44.9179 21.4027 44.7097 19.8813 43.5881 18.7597L29.2403 4.41187C27.8527 3.02428 25.8765 3.02573 24.2861 3.36776C22.6081 3.72863 20.7334 4.58419 18.8396 5.74801C16.4978 7.18716 13.9881 9.18353 11.5858 11.5858C9.18354 13.988 7.18717 16.4978 5.74802 18.8396C4.58421 20.7334 3.72865 22.6081 3.36778 24.2861C3.02574 25.8765 3.02429 27.8527 4.41189 29.2403Z" fill="currentColor" fill-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <h1>Dungeon Coder</h1>
+            </div>
+            <button id="rankingsBackBtn" class="btn-back">
+                <span class="material-symbols-outlined">arrow_back</span>
+                Back
+            </button>
+        </header>
+        <main class="rankings-view-content" style="background-color:#1e0f24;">
+            <div class="rankings-view-card">
+                <h2 class="rankings-view-title">
+                    <span class="material-symbols-outlined text-primary" style="color:var(--color-primary);font-size:1.5rem;">leaderboard</span>
+                    Global Rankings
+                </h2>
+                <div class="ranking-mode-selector" id="rankingModeSelector">
+                    <button id="rankGlobalBtn" class="rank-mode-btn">🌍 Global</button>
+                    <div class="level-selector" id="viewLevelSelector">
+                        <button id="viewRankFirstBtn" class="rank-nav-btn" title="Primeira fase">«</button>
+                        <button id="viewRankPrevBtn" class="rank-nav-btn" title="Anterior">‹</button>
+                        <span id="viewRankLevelDisplay" class="rank-level-display">Fase 1</span>
+                        <button id="viewRankNextBtn" class="rank-nav-btn" title="Próxima">›</button>
+                        <button id="viewRankLastBtn" class="rank-nav-btn" title="Última fase">»</button>
+                    </div>
+                </div>
+                <div class="ranking-tabs">
+                    <button class="ranking-tab active" data-tab="score" data-view="score">Score</button>
+                    <button class="ranking-tab" data-tab="deaths" data-view="deaths">Deaths</button>
+                    <button class="ranking-tab" data-tab="movements" data-view="movements">Movements</button>
+                </div>
+                <div class="ranking-content">
+                    <div class="ranking-panel active" id="viewRankingScore">
+                        <div class="ranking-list" id="viewRankingScoreList"></div>
+                    </div>
+                    <div class="ranking-panel" id="viewRankingDeaths">
+                        <div class="ranking-list" id="viewRankingDeathsList"></div>
+                    </div>
+                    <div class="ranking-panel" id="viewRankingMovements">
+                        <div class="ranking-list" id="viewRankingMovementsList"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/app.js" type="module"></script>
+</body>
+</html>
