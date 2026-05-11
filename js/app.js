@@ -594,7 +594,7 @@ class App {
 
     pickRandomBg() {
         const file = IMAGE_FILES[Math.floor(Math.random() * IMAGE_FILES.length)];
-        document.querySelector('.stage').style.setProperty('--stage-bg', `url('/teste-block-engine-mvp/images/${file}')`);
+        document.querySelector('.stage').style.setProperty('--stage-bg', `url('/Dungeon_Coder/images/${file}')`);
     }
 
     playBgMusic() {
