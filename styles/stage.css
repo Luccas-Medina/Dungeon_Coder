@@ -82,7 +82,7 @@
 .grid-pattern {
     background-image: radial-gradient(circle, var(--color-accent-purple) 1.5px, transparent 1.5px);
     background-size: 30px 30px;
-    opacity: 0.6;
+    /* opacity: 0.6; */
 }
 
 .stage {
