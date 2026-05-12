@@ -242,6 +242,7 @@
     color: rgba(255, 140, 0, 0.5);
     font-style: italic;
     pointer-events: none;
+    color:white;
 }
 
 /* Child blocks inside repeat: indented style */

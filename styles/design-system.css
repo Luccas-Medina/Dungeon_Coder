@@ -728,11 +728,12 @@ html.light .actor-emoji {
 }
 
 html.light .block-children:empty {
-    border-color: rgba(255, 140, 0, 0.5);
+    border-color: rgba(255, 140, 0, 0.8);
+    background: var(--color-control-light);
 }
 
 html.light .block-children:empty::after {
-    color: rgba(255, 140, 0, 0.6);
+    color: black;
 }
 
 html.light .menu-title {
