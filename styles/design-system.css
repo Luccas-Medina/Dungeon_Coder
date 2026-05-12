@@ -527,7 +527,7 @@ html.light .cell.start {
 }
 
 html.light .stage::before {
-    opacity: 0.8;
+    opacity: 0.6;
 }
 
 html.light .objective-info {
